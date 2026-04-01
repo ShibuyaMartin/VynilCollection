@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Vinyl Archive</title>
+    <meta
+      name="description"
+      content="A minimal HTML cover-flow archive for Martin Shibuya's vinyl collection."
+    >
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
+    >
+    <link rel="stylesheet" href="./styles.css?v=17">
+    <script type="module" src="./app.js?v=15"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <section class="control-strip" aria-label="Collection controls">
+        <label class="field field--search">
+          <span class="field__label">Search</span>
+          <input
+            id="search-input"
+            name="search"
+            type="search"
+            placeholder="Artist, album, genre, notes"
+            autocomplete="off"
+          >
+        </label>
+
+        <label class="field field--compact">
+          <span class="field__label">Genre</span>
+          <select id="genre-filter" name="genre">
+            <option value="all">All</option>
+          </select>
+        </label>
+
+        <label class="field field--compact">
+          <span class="field__label">Style</span>
+          <select id="style-filter" name="style">
+            <option value="all">All</option>
+          </select>
+        </label>
+
+        <button class="ghost-button" id="reset-filters" type="button">Reset</button>
+      </section>
+
+      <main class="experience-shell">
+        <section class="gallery-shell">
+          <div class="gallery-stage" id="gallery-stage" aria-label="Cover flow vinyl gallery">
+            <div class="cover-layer" id="cover-layer"></div>
+
+            <div class="scene-empty" id="scene-empty" hidden>
+              <div class="scene-empty__box">
+                <h2 class="scene-empty__title">No records match these filters</h2>
+                <p class="scene-empty__copy">
+                  Reset the filters or search with a broader term.
+                </p>
+                <button class="scene-empty__button" id="scene-empty-reset" type="button">
+                  Reset filters
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="transport">
+            <button class="transport__button" id="prev-button" type="button" aria-label="Previous record">
+              <span>&lsaquo;</span>
+            </button>
+            <input
+              class="transport__slider"
+              id="position-slider"
+              type="range"
+              min="0"
+              max="0"
+              value="0"
+              step="1"
+              aria-label="Browse position"
+            >
+            <button class="transport__button" id="next-button" type="button" aria-label="Next record">
+              <span>&rsaquo;</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="album-panel" aria-live="polite">
+          <div class="album-summary">
+            <p class="album-summary__kicker" id="album-number">Record -</p>
+            <h1 class="album-summary__title" id="album-title">Pick a record</h1>
+            <p class="album-summary__artist" id="album-artist">Artist details will appear here.</p>
+            <p class="album-summary__meta" id="album-meta">Genre • Country • Year • Label</p>
+
+            <div class="listen-strip">
+              <a class="listen-link" id="spotify-link" href="#" target="_blank" rel="noreferrer">
+                Spotify
+              </a>
+              <a class="listen-link" id="tidal-link" href="#" target="_blank" rel="noreferrer">
+                TIDAL
+              </a>
+              <a class="listen-link" id="discogs-link" href="#" target="_blank" rel="noreferrer" hidden>
+                Discogs
+              </a>
+            </div>
+
+            <div class="notes-card">
+              <p class="notes-card__label">Notes</p>
+              <p class="notes-card__copy" id="album-notes">Select a record to read its notes.</p>
+            </div>
+          </div>
+
+          <div class="tracklist-panel">
+            <div class="section-heading">
+              <h2>Tracklist</h2>
+              <p class="tracklist-panel__status" id="tracklist-status">Waiting for a record</p>
+            </div>
+
+            <ol class="tracklist-list" id="tracklist-list"></ol>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
