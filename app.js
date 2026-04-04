@@ -791,10 +791,10 @@ function coverTransform(offset) {
   const direction = Math.sign(offset) || 0;
   const poses = isCompactViewport()
     ? {
-        0: { x: 0, y: -0.28, z: 176, rotateY: 0, rotateX: 0, scale: 1.22 },
-        1: { x: 18.2, y: -0.1, z: 68, rotateY: -72, rotateX: 1, scale: 0.72 },
-        2: { x: 33.4, y: 0.02, z: -24, rotateY: -82, rotateX: 1.35, scale: 0.5 },
-        3: { x: 46.2, y: 0.08, z: -96, rotateY: -87, rotateX: 1.7, scale: 0.34 },
+        0: { x: 0, y: 0, z: 296, rotateY: 0, rotateX: 0, scale: 1.96 },
+        1: { x: 18.6, y: 0, z: 132, rotateY: -72, rotateX: 0.92, scale: 0.8 },
+        2: { x: 31.8, y: 0.05, z: 24, rotateY: -82, rotateX: 1.28, scale: 0.48 },
+        3: { x: 42.4, y: 0.1, z: -56, rotateY: -87, rotateX: 1.6, scale: 0.3 },
       }
     : {
         0: { x: 0, y: -0.18, z: 352, rotateY: 0, rotateX: 0, scale: 1.64 },
