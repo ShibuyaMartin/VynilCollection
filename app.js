@@ -164,6 +164,7 @@ function bindEvents() {
   elements.galleryStage.addEventListener("pointerup", handlePointerUp);
   elements.galleryStage.addEventListener("pointerleave", handlePointerUp);
   elements.galleryStage.addEventListener("wheel", handleWheel, { passive: false });
+  window.addEventListener("resize", handleViewportResize, { passive: true });
 }
 
 function openSearchOverlay() {
@@ -183,6 +184,13 @@ function closeSearchOverlay() {
   }
 
   elements.searchOverlay.hidden = true;
+}
+
+function handleViewportResize() {
+  window.clearTimeout(handleViewportResize.timeoutId);
+  handleViewportResize.timeoutId = window.setTimeout(() => {
+    render();
+  }, 60);
 }
 
 function handlePointerDown(event) {
@@ -386,7 +394,7 @@ function renderCoverLayer() {
     return;
   }
 
-  const visibleRange = 3;
+  const visibleRange = isCompactViewport() ? 2 : 3;
   const nextCards = [];
   const visibleKeys = new Set();
 
@@ -774,15 +782,26 @@ function isLocalPreviewHost() {
   return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 }
 
+function isCompactViewport() {
+  return window.matchMedia("(max-width: 768px)").matches;
+}
+
 function coverTransform(offset) {
   const distance = Math.abs(offset);
   const direction = Math.sign(offset) || 0;
-  const poses = {
-    0: { x: 0, y: -0.18, z: 352, rotateY: 0, rotateX: 0, scale: 1.64 },
-    1: { x: 15.8, y: -0.06, z: 172, rotateY: -68, rotateX: 1.15, scale: 0.98 },
-    2: { x: 29.8, y: 0.02, z: 34, rotateY: -79, rotateX: 1.5, scale: 0.75 },
-    3: { x: 43.8, y: 0.08, z: -64, rotateY: -85, rotateX: 1.8, scale: 0.55 },
-  };
+  const poses = isCompactViewport()
+    ? {
+        0: { x: 0, y: -0.28, z: 176, rotateY: 0, rotateX: 0, scale: 1.22 },
+        1: { x: 18.2, y: -0.1, z: 68, rotateY: -72, rotateX: 1, scale: 0.72 },
+        2: { x: 33.4, y: 0.02, z: -24, rotateY: -82, rotateX: 1.35, scale: 0.5 },
+        3: { x: 46.2, y: 0.08, z: -96, rotateY: -87, rotateX: 1.7, scale: 0.34 },
+      }
+    : {
+        0: { x: 0, y: -0.18, z: 352, rotateY: 0, rotateX: 0, scale: 1.64 },
+        1: { x: 15.8, y: -0.06, z: 172, rotateY: -68, rotateX: 1.15, scale: 0.98 },
+        2: { x: 29.8, y: 0.02, z: 34, rotateY: -79, rotateX: 1.5, scale: 0.75 },
+        3: { x: 43.8, y: 0.08, z: -64, rotateY: -85, rotateX: 1.8, scale: 0.55 },
+      };
   const pose = poses[distance] ?? poses[3];
   const x = pose.x * direction;
   const y = pose.y;
