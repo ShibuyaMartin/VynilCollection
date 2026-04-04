@@ -1,5 +1,4 @@
 const state = {
-  collectionName: "Collection",
   records: [],
   filteredRecords: [],
   activeIndex: 0,
@@ -15,9 +14,11 @@ const interaction = {
   suppressClickUntil: 0,
 };
 
-const REFLECTION_TUNING_STORAGE_KEY = "vinilos-reflection-tuning";
+const DATA_VERSION = "1775277600";
+const SCENE_TUNING_STORAGE_KEY = "vinilos-scene-tuning";
+const LEGACY_SCENE_TUNING_STORAGE_KEY = "vinilos-reflection-tuning";
 
-const REFLECTION_TUNING_DEFAULTS = {
+const SCENE_TUNING_DEFAULTS = {
   backgroundGlowColor: "#ffffff",
   backgroundGlowStrength: 0,
   backgroundGlowBlur: 240,
@@ -47,6 +48,9 @@ const REFLECTION_TUNING_DEFAULTS = {
 const coverCardCache = new Map();
 
 const elements = {
+  searchToggle: document.querySelector("#search-toggle"),
+  searchOverlay: document.querySelector("#search-overlay"),
+  searchClose: document.querySelector("#search-close"),
   searchInput: document.querySelector("#search-input"),
   genreFilter: document.querySelector("#genre-filter"),
   styleFilter: document.querySelector("#style-filter"),
@@ -62,12 +66,13 @@ const elements = {
   albumTitle: document.querySelector("#album-title"),
   albumArtist: document.querySelector("#album-artist"),
   albumMeta: document.querySelector("#album-meta"),
-  albumNotes: document.querySelector("#album-notes"),
   discogsLink: document.querySelector("#discogs-link"),
   spotifyLink: document.querySelector("#spotify-link"),
   tidalLink: document.querySelector("#tidal-link"),
   tracklistStatus: document.querySelector("#tracklist-status"),
   tracklistList: document.querySelector("#tracklist-list"),
+  playerShell: document.querySelector("#player-shell"),
+  playerWrap: document.querySelector("#player-wrap"),
   tuningPanel: document.querySelector("#tuning-panel"),
   tuningInputs: [...document.querySelectorAll("[data-tuning-key]")],
   tuningOutputs: [...document.querySelectorAll("[data-tuning-output]")],
@@ -85,13 +90,12 @@ init().catch((error) => {
 });
 
 async function init() {
-  const response = await fetch("/vinilos/data/collection.json?v=1775263830");
+  const response = await fetch(`/vinilos/data/collection.json?v=${DATA_VERSION}`);
   if (!response.ok) {
     throw new Error(`Failed to load collection.json (${response.status})`);
   }
 
   const payload = await response.json();
-  state.collectionName = payload.collectionName ?? "Vinyl Collection";
   state.records = dedupeRecords(payload.records ?? []);
 
   buildFilters();
@@ -102,6 +106,14 @@ async function init() {
 }
 
 function bindEvents() {
+  elements.searchToggle?.addEventListener("click", () => {
+    openSearchOverlay();
+  });
+
+  elements.searchClose?.addEventListener("click", () => {
+    closeSearchOverlay();
+  });
+
   elements.searchInput.addEventListener("input", (event) => {
     state.filters.query = event.target.value.trim();
     applyFilters();
@@ -129,11 +141,15 @@ function bindEvents() {
   elements.nextButton.addEventListener("click", () => navigate(1));
 
   elements.slider.addEventListener("input", (event) => {
-    state.activeIndex = Number(event.target.value);
-    render();
+    setActiveIndex(Number(event.target.value));
   });
 
   document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !elements.searchOverlay?.hidden) {
+      closeSearchOverlay();
+      return;
+    }
+
     if (event.key === "ArrowLeft") {
       navigate(-1);
     }
@@ -148,6 +164,25 @@ function bindEvents() {
   elements.galleryStage.addEventListener("pointerup", handlePointerUp);
   elements.galleryStage.addEventListener("pointerleave", handlePointerUp);
   elements.galleryStage.addEventListener("wheel", handleWheel, { passive: false });
+}
+
+function openSearchOverlay() {
+  if (!elements.searchOverlay) {
+    return;
+  }
+
+  elements.searchOverlay.hidden = false;
+  window.setTimeout(() => {
+    elements.searchInput?.focus();
+  }, 50);
+}
+
+function closeSearchOverlay() {
+  if (!elements.searchOverlay) {
+    return;
+  }
+
+  elements.searchOverlay.hidden = true;
 }
 
 function handlePointerDown(event) {
@@ -307,8 +342,22 @@ function navigate(delta) {
     return;
   }
 
+  setActiveIndex(state.activeIndex + delta);
+}
+
+function setActiveIndex(nextIndex) {
+  if (!state.filteredRecords.length) {
+    return;
+  }
+
   const maxIndex = state.filteredRecords.length - 1;
-  state.activeIndex = clamp(state.activeIndex + delta, 0, maxIndex);
+  const clampedIndex = clamp(nextIndex, 0, maxIndex);
+
+  if (clampedIndex === state.activeIndex) {
+    return;
+  }
+
+  state.activeIndex = clampedIndex;
   render();
 }
 
@@ -443,8 +492,7 @@ function createCoverCard() {
       return;
     }
 
-    state.activeIndex = targetIndex;
-    render();
+    setActiveIndex(targetIndex);
   });
 
   return { frame, card, image, reflection, reflectionImage, placeholder, genre, title, artist };
@@ -453,6 +501,7 @@ function createCoverCard() {
 function updateCoverCard(entry, record, index, offset) {
   const { frame, card, image, reflection, reflectionImage, placeholder, genre, title, artist } = entry;
   const isNewCard = !frame.isConnected;
+  const previousOffset = Number(card.dataset.offset || "NaN");
   const preferredCoverUrl = resolveCoverUrl(record.coverUrl || record.thumbUrl || "");
   const fallbackCoverUrl =
     preferredCoverUrl && record.thumbUrl && resolveCoverUrl(record.thumbUrl) !== preferredCoverUrl
@@ -460,6 +509,7 @@ function updateCoverCard(entry, record, index, offset) {
       : "";
 
   card.dataset.index = String(index);
+  card.dataset.offset = String(offset);
   card.dataset.fallbackCover = fallbackCoverUrl;
   card.setAttribute("aria-label", `${record.artist} - ${record.title}`);
   const distance = Math.abs(offset);
@@ -499,6 +549,8 @@ function updateCoverCard(entry, record, index, offset) {
     reflectionImage.style.filter = nextFilter;
   }
 
+  syncCoverMotionClasses(card, previousOffset, offset, isNewCard);
+
   genre.textContent = getGenresForRecord(record)[0] || record.genre || "Collection";
   title.textContent = record.title;
   artist.textContent = record.artist;
@@ -523,6 +575,40 @@ function updateCoverCard(entry, record, index, offset) {
   }
 }
 
+function syncCoverMotionClasses(card, previousOffset, offset, isNewCard) {
+  const motionClasses = [
+    "cover-card--to-center-from-left",
+    "cover-card--to-center-from-right",
+    "cover-card--from-center-to-left",
+    "cover-card--from-center-to-right",
+  ];
+
+  card.classList.remove(...motionClasses);
+
+  if (isNewCard || Number.isNaN(previousOffset) || previousOffset === offset) {
+    return;
+  }
+
+  let nextMotionClass = "";
+  if (offset === 0 && previousOffset < 0) {
+    nextMotionClass = "cover-card--to-center-from-left";
+  } else if (offset === 0 && previousOffset > 0) {
+    nextMotionClass = "cover-card--to-center-from-right";
+  } else if (previousOffset === 0 && offset < 0) {
+    nextMotionClass = "cover-card--from-center-to-left";
+  } else if (previousOffset === 0 && offset > 0) {
+    nextMotionClass = "cover-card--from-center-to-right";
+  }
+
+  if (!nextMotionClass) {
+    return;
+  }
+
+  requestAnimationFrame(() => {
+    card.classList.add(nextMotionClass);
+  });
+}
+
 function renderAlbumPanel() {
   const record = state.filteredRecords[state.activeIndex];
 
@@ -531,12 +617,10 @@ function renderAlbumPanel() {
     elements.albumTitle.textContent = "No record selected";
     elements.albumArtist.textContent = "Adjust the filters to bring the archive back.";
     elements.albumMeta.textContent = "Genre • Style • Year • Label";
-    if (elements.albumNotes) {
-      elements.albumNotes.textContent = "The notes will appear here once a record is selected.";
-    }
     setListenLinks(null);
     hideDiscogsLink();
     renderTracklist([]);
+    updatePlayer(null);
     return;
   }
 
@@ -544,9 +628,6 @@ function renderAlbumPanel() {
   elements.albumTitle.textContent = record.title;
   elements.albumArtist.textContent = record.artist;
   elements.albumMeta.textContent = buildMetaLine(record);
-  if (elements.albumNotes) {
-    elements.albumNotes.textContent = record.notes || "No notes recorded yet.";
-  }
 
   setListenLinks(record);
 
@@ -559,7 +640,7 @@ function renderAlbumPanel() {
   }
 
   renderTracklist(record.tracklist ?? []);
-  if(typeof updatePlayer==="function") updatePlayer(record);
+  updatePlayer(record);
 }
 
 function buildMetaLine(record) {
@@ -591,8 +672,14 @@ function renderTracklist(tracklist) {
     return;
   }
 
-  elements.tracklistStatus.textContent = `${tracklist.length} tracks`;
-  elements.tracklistList.className = "tracklist-list";
+  const hasAnyDurations = tracklist.some((track) => String(track.duration || "").trim());
+
+  elements.tracklistStatus.textContent = hasAnyDurations
+    ? `${tracklist.length} tracks`
+    : `${tracklist.length} tracks · durations unavailable`;
+  elements.tracklistList.className = hasAnyDurations
+    ? "tracklist-list"
+    : "tracklist-list tracklist-list--no-duration";
 
   tracklist.forEach((track, index) => {
     const item = document.createElement("li");
@@ -619,7 +706,7 @@ function renderTracklist(tracklist) {
 
     const duration = document.createElement("span");
     duration.className = "tracklist-list__duration";
-    duration.textContent = track.duration || "--:--";
+    duration.textContent = track.duration || "";
 
     item.append(position, titleWrap, duration);
     elements.tracklistList.append(item);
@@ -691,10 +778,10 @@ function coverTransform(offset) {
   const distance = Math.abs(offset);
   const direction = Math.sign(offset) || 0;
   const poses = {
-    0: { x: 0, y: 0, z: 280, rotateY: 0, rotateX: 0, scale: 1.62 },
-    1: { x: 15.5, y: 0, z: 140, rotateY: -50, rotateX: 0.8, scale: 0.98 },
-    2: { x: 28, y: 0, z: 44, rotateY: -64, rotateX: 1, scale: 0.8 },
-    3: { x: 40.5, y: 0, z: -16, rotateY: -74, rotateX: 1.2, scale: 0.62 },
+    0: { x: 0, y: -0.18, z: 352, rotateY: 0, rotateX: 0, scale: 1.64 },
+    1: { x: 15.8, y: -0.06, z: 172, rotateY: -68, rotateX: 1.15, scale: 0.98 },
+    2: { x: 29.8, y: 0.02, z: 34, rotateY: -79, rotateX: 1.5, scale: 0.75 },
+    3: { x: 43.8, y: 0.08, z: -64, rotateY: -85, rotateX: 1.8, scale: 0.55 },
   };
   const pose = poses[distance] ?? poses[3];
   const x = pose.x * direction;
@@ -814,41 +901,60 @@ function qualityScore(record) {
   return score;
 }
 
-// ── SEARCH TOGGLE ──
-document.addEventListener('DOMContentLoaded', function() {
-  const toggle = document.getElementById('search-toggle');
-  const overlay = document.getElementById('search-overlay');
-  const closeBtn = document.getElementById('search-close');
-  const input = document.getElementById('search-input');
-  if (!toggle || !overlay) return;
-  toggle.addEventListener('click', () => { overlay.hidden = false; setTimeout(() => input && input.focus(), 50); });
-  closeBtn && closeBtn.addEventListener('click', () => { overlay.hidden = true; });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !overlay.hidden) overlay.hidden = true;
-  });
-});
-
-// ── YOUTUBE PLAYER ──
 let currentPlayerQuery = null;
 async function updatePlayer(record) {
-  const shell = document.getElementById('player-shell');
-  const wrap = document.getElementById('player-wrap');
-  if (!shell || !wrap) return;
-  const query = '"' + record.title + '" ' + record.artist + ' full album';
-  if (query === currentPlayerQuery) return;
+  if (!elements.playerShell || !elements.playerWrap) {
+    return;
+  }
+
+  if (!record) {
+    currentPlayerQuery = null;
+    elements.playerShell.hidden = true;
+    elements.playerWrap.innerHTML = '<div class="player-searching">Buscando...</div>';
+    return;
+  }
+
+  const query = `"${record.title}" ${record.artist} full album`;
+  if (query === currentPlayerQuery) {
+    return;
+  }
+
+  const pendingQuery = query;
   currentPlayerQuery = query;
-  shell.hidden = false;
-  wrap.innerHTML = '<div class="player-searching">Buscando...</div>';
+  elements.playerShell.hidden = false;
+  elements.playerWrap.innerHTML = '<div class="player-searching">Buscando...</div>';
+
   try {
-    const res = await fetch('/yt-search?q=' + encodeURIComponent(query));
-    if (!res.ok) throw new Error('no result');
+    const res = await fetch(`/yt-search?q=${encodeURIComponent(query)}`);
+    if (!res.ok) {
+      throw new Error("no result");
+    }
+    if (currentPlayerQuery !== pendingQuery) {
+      return;
+    }
+
     const data = await res.json();
+    if (currentPlayerQuery !== pendingQuery) {
+      return;
+    }
     if (data.videoId) {
-      wrap.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + data.videoId + '?autoplay=0&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
-    } else throw new Error('not found');
-  } catch(e) {
-    const ytSearch = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query);
-    wrap.innerHTML = '<div class="player-not-found"><a href="' + ytSearch + '" target="_blank" rel="noreferrer" style="color:inherit;text-decoration:underline">Buscar en YouTube ↗</a></div>';
+      elements.playerWrap.innerHTML =
+        `<iframe src="https://www.youtube-nocookie.com/embed/${data.videoId}?autoplay=0&rel=0" ` +
+        'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" ' +
+        'allowfullscreen loading="lazy"></iframe>';
+      return;
+    }
+
+    throw new Error("not found");
+  } catch (error) {
+    if (currentPlayerQuery !== pendingQuery) {
+      return;
+    }
+
+    const ytSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+    elements.playerWrap.innerHTML =
+      `<div class="player-not-found"><a href="${ytSearch}" target="_blank" rel="noreferrer" ` +
+      'style="color:inherit;text-decoration:underline">Buscar en YouTube ↗</a></div>';
   }
 }
 
@@ -859,8 +965,8 @@ function initTuningPanel() {
 
   elements.tuningPanel.hidden = false;
 
-  const savedValues = loadReflectionTuning();
-  const tuningValues = { ...REFLECTION_TUNING_DEFAULTS, ...savedValues };
+  const savedValues = loadSceneTuning();
+  const tuningValues = { ...SCENE_TUNING_DEFAULTS, ...savedValues };
 
   elements.tuningInputs.forEach((input) => {
     const key = input.dataset.tuningKey;
@@ -875,27 +981,28 @@ function initTuningPanel() {
   elements.tuningCopy?.addEventListener("click", copyTuningValues);
   elements.tuningReset?.addEventListener("click", resetTuningValues);
 
-  applyReflectionTuning(tuningValues);
+  applySceneTuning(tuningValues);
 }
 
 function handleTuningInput() {
   const tuningValues = readTuningValuesFromControls();
-  saveReflectionTuning(tuningValues);
-  applyReflectionTuning(tuningValues);
+  saveSceneTuning(tuningValues);
+  applySceneTuning(tuningValues);
 }
 
 function resetTuningValues() {
   elements.tuningInputs.forEach((input) => {
     const key = input.dataset.tuningKey;
-    if (!key || !(key in REFLECTION_TUNING_DEFAULTS)) {
+    if (!key || !(key in SCENE_TUNING_DEFAULTS)) {
       return;
     }
 
-    input.value = String(REFLECTION_TUNING_DEFAULTS[key]);
+    input.value = String(SCENE_TUNING_DEFAULTS[key]);
   });
 
-  localStorage.removeItem(REFLECTION_TUNING_STORAGE_KEY);
-  applyReflectionTuning(REFLECTION_TUNING_DEFAULTS);
+  localStorage.removeItem(SCENE_TUNING_STORAGE_KEY);
+  localStorage.removeItem(LEGACY_SCENE_TUNING_STORAGE_KEY);
+  applySceneTuning(SCENE_TUNING_DEFAULTS);
 }
 
 async function copyTuningValues() {
@@ -915,7 +1022,7 @@ async function copyTuningValues() {
 }
 
 function readTuningValuesFromControls() {
-  const values = { ...REFLECTION_TUNING_DEFAULTS };
+  const values = { ...SCENE_TUNING_DEFAULTS };
 
   elements.tuningInputs.forEach((input) => {
     const key = input.dataset.tuningKey;
@@ -929,7 +1036,7 @@ function readTuningValuesFromControls() {
   return values;
 }
 
-function applyReflectionTuning(values) {
+function applySceneTuning(values) {
   const rootStyle = document.documentElement.style;
   rootStyle.setProperty("--background-glow-color-rgb", hexToRgbChannels(values.backgroundGlowColor));
   rootStyle.setProperty("--background-glow-strength", String(values.backgroundGlowStrength));
@@ -1061,9 +1168,11 @@ function hexToRgbChannels(value) {
   return `${red} ${green} ${blue}`;
 }
 
-function loadReflectionTuning() {
+function loadSceneTuning() {
   try {
-    const raw = localStorage.getItem(REFLECTION_TUNING_STORAGE_KEY);
+    const raw =
+      localStorage.getItem(SCENE_TUNING_STORAGE_KEY) ||
+      localStorage.getItem(LEGACY_SCENE_TUNING_STORAGE_KEY);
     return raw ? JSON.parse(raw) : {};
   } catch (error) {
     console.warn("Unable to read saved tuning values.", error);
@@ -1071,9 +1180,9 @@ function loadReflectionTuning() {
   }
 }
 
-function saveReflectionTuning(values) {
+function saveSceneTuning(values) {
   try {
-    localStorage.setItem(REFLECTION_TUNING_STORAGE_KEY, JSON.stringify(values));
+    localStorage.setItem(SCENE_TUNING_STORAGE_KEY, JSON.stringify(values));
   } catch (error) {
     console.warn("Unable to save tuning values.", error);
   }
