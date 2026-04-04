@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Vinyl Archive</title>
+    <title>Vinilos Shibu</title>
     <meta
       name="description"
       content="A minimal HTML cover-flow archive for Martin Shibuya's vinyl collection."
@@ -14,38 +14,23 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
     >
-    <link rel="stylesheet" href="./styles.css?v=17">
-    <script type="module" src="./app.js?v=15"></script>
-  </head>
+    <link rel="stylesheet" href="./styles.css?v=1775263773">
+    <script type="module" src="./app.js?v=1775263830"></script>
+    <meta property="og:title" content="Vinilos Shibu">
+</head>
   <body>
     <div class="app-shell">
       <section class="control-strip" aria-label="Collection controls">
-        <label class="field field--search">
-          <span class="field__label">Search</span>
-          <input
-            id="search-input"
-            name="search"
-            type="search"
-            placeholder="Artist, album, genre, notes"
-            autocomplete="off"
-          >
-        </label>
-
-        <label class="field field--compact">
-          <span class="field__label">Genre</span>
-          <select id="genre-filter" name="genre">
-            <option value="all">All</option>
-          </select>
-        </label>
-
-        <label class="field field--compact">
-          <span class="field__label">Style</span>
-          <select id="style-filter" name="style">
-            <option value="all">All</option>
-          </select>
-        </label>
-
-        <button class="ghost-button" id="reset-filters" type="button">Reset</button>
+        <button class="search-toggle" id="search-toggle" type="button" aria-label="Search">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg>
+        </button>
+        <div class="search-overlay" id="search-overlay" hidden>
+          <input id="search-input" name="search" type="search" placeholder="Artista, álbum, género..." autocomplete="off">
+          <button class="search-close" id="search-close" type="button">✕</button>
+        </div>
+        <select id="genre-filter" name="genre" hidden><option value="all">All</option></select>
+        <select id="style-filter" name="style" hidden><option value="all">All</option></select>
+        <button id="reset-filters" type="button" hidden>Reset</button>
       </section>
 
       <main class="experience-shell">
@@ -104,12 +89,7 @@
                 Discogs
               </a>
             </div>
-
-            <div class="notes-card">
-              <p class="notes-card__label">Notes</p>
-              <p class="notes-card__copy" id="album-notes">Select a record to read its notes.</p>
-            </div>
-          </div>
+</div>
 
           <div class="tracklist-panel">
             <div class="section-heading">
@@ -118,6 +98,11 @@
             </div>
 
             <ol class="tracklist-list" id="tracklist-list"></ol>
+          </div>
+
+          <div class="player-shell" id="player-shell" hidden>
+            <p class="player-label">Escuchar en YouTube</p>
+            <div class="player-iframe-wrap" id="player-wrap"><div class="player-searching">Buscando...</div></div>
           </div>
         </section>
       </main>

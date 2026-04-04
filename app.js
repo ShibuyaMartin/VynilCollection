@@ -50,7 +50,7 @@ init().catch((error) => {
 });
 
 async function init() {
-  const response = await fetch("./data/collection.json");
+  const response = await fetch("/vinilos/data/collection.json?v=1775263830");
   if (!response.ok) {
     throw new Error(`Failed to load collection.json (${response.status})`);
   }
@@ -481,6 +481,7 @@ function renderAlbumPanel() {
   }
 
   renderTracklist(record.tracklist ?? []);
+  if(typeof updatePlayer==="function") updatePlayer(record);
 }
 
 function buildMetaLine(record) {
@@ -714,4 +715,42 @@ function qualityScore(record) {
     score += 1;
   }
   return score;
+}
+
+// ── SEARCH TOGGLE ──
+document.addEventListener('DOMContentLoaded', function() {
+  const toggle = document.getElementById('search-toggle');
+  const overlay = document.getElementById('search-overlay');
+  const closeBtn = document.getElementById('search-close');
+  const input = document.getElementById('search-input');
+  if (!toggle || !overlay) return;
+  toggle.addEventListener('click', () => { overlay.hidden = false; setTimeout(() => input && input.focus(), 50); });
+  closeBtn && closeBtn.addEventListener('click', () => { overlay.hidden = true; });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !overlay.hidden) overlay.hidden = true;
+  });
+});
+
+// ── YOUTUBE PLAYER ──
+let currentPlayerQuery = null;
+async function updatePlayer(record) {
+  const shell = document.getElementById('player-shell');
+  const wrap = document.getElementById('player-wrap');
+  if (!shell || !wrap) return;
+  const query = '"' + record.title + '" ' + record.artist + ' full album';
+  if (query === currentPlayerQuery) return;
+  currentPlayerQuery = query;
+  shell.hidden = false;
+  wrap.innerHTML = '<div class="player-searching">Buscando...</div>';
+  try {
+    const res = await fetch('/yt-search?q=' + encodeURIComponent(query));
+    if (!res.ok) throw new Error('no result');
+    const data = await res.json();
+    if (data.videoId) {
+      wrap.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + data.videoId + '?autoplay=0&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
+    } else throw new Error('not found');
+  } catch(e) {
+    const ytSearch = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query);
+    wrap.innerHTML = '<div class="player-not-found"><a href="' + ytSearch + '" target="_blank" rel="noreferrer" style="color:inherit;text-decoration:underline">Buscar en YouTube ↗</a></div>';
+  }
 }
