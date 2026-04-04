@@ -15,6 +15,35 @@ const interaction = {
   suppressClickUntil: 0,
 };
 
+const REFLECTION_TUNING_STORAGE_KEY = "vinilos-reflection-tuning";
+
+const REFLECTION_TUNING_DEFAULTS = {
+  backgroundGlowColor: "#ffffff",
+  backgroundGlowStrength: 0,
+  backgroundGlowBlur: 240,
+  backgroundGlowX: 52,
+  backgroundGlowY: 50,
+  backgroundVignette: 1,
+  reflectionOpacity: 0.47,
+  centerReflectionOpacity: 1,
+  nearReflectionOpacity: 0.35,
+  farReflectionOpacity: 0.42,
+  centerReflectionBlur: 2,
+  nearReflectionBlur: 8,
+  farReflectionBlur: 24,
+  activeStrength: 0.007,
+  sideStrength: 0,
+  activeGap: 4,
+  sideGap: 0,
+  fadeHeight: 30,
+  fadeBlur: 18,
+  fadeTop: 0.11,
+  fadeMid: 0.71,
+  fadeBottom: 0.7,
+  edgeDark: 0.44,
+  centerDark: 0.26,
+};
+
 const coverCardCache = new Map();
 
 const elements = {
@@ -39,6 +68,12 @@ const elements = {
   tidalLink: document.querySelector("#tidal-link"),
   tracklistStatus: document.querySelector("#tracklist-status"),
   tracklistList: document.querySelector("#tracklist-list"),
+  tuningPanel: document.querySelector("#tuning-panel"),
+  tuningInputs: [...document.querySelectorAll("[data-tuning-key]")],
+  tuningOutputs: [...document.querySelectorAll("[data-tuning-output]")],
+  tuningOutput: document.querySelector("#tuning-output"),
+  tuningCopy: document.querySelector("#tuning-copy"),
+  tuningReset: document.querySelector("#tuning-reset"),
 };
 
 init().catch((error) => {
@@ -63,6 +98,7 @@ async function init() {
   bindEvents();
   syncFiltersFromControls();
   applyFilters({ autoResetIfEmpty: true });
+  initTuningPanel();
 }
 
 function bindEvents() {
@@ -322,14 +358,14 @@ function renderCoverLayer() {
     }
 
     updateCoverCard(entry, record, index, offset);
-    nextCards.push(entry.card);
+    nextCards.push(entry.frame);
   }
 
   for (const [recordKey, entry] of coverCardCache.entries()) {
     if (visibleKeys.has(recordKey)) {
       continue;
     }
-    entry.card.remove();
+    entry.frame.remove();
     coverCardCache.delete(recordKey);
   }
 
@@ -337,6 +373,9 @@ function renderCoverLayer() {
 }
 
 function createCoverCard() {
+  const frame = document.createElement("div");
+  frame.className = "cover-frame";
+
   const card = document.createElement("button");
   card.type = "button";
   card.className = "cover-card";
@@ -345,6 +384,18 @@ function createCoverCard() {
   image.className = "cover-card__image";
   image.loading = "eager";
   image.referrerPolicy = "strict-origin-when-cross-origin";
+
+  const reflection = document.createElement("div");
+  reflection.className = "cover-reflection";
+  reflection.hidden = true;
+
+  const reflectionImage = document.createElement("img");
+  reflectionImage.className = "cover-reflection__image";
+  reflectionImage.loading = "eager";
+  reflectionImage.referrerPolicy = "strict-origin-when-cross-origin";
+  reflectionImage.alt = "";
+  reflectionImage.setAttribute("aria-hidden", "true");
+  reflection.append(reflectionImage);
 
   const placeholder = document.createElement("div");
   placeholder.className = "cover-card__placeholder";
@@ -360,18 +411,26 @@ function createCoverCard() {
 
   placeholder.append(genre, title, artist);
   card.append(image, placeholder);
+  frame.append(card, reflection);
 
   image.addEventListener("load", () => {
     placeholder.hidden = true;
+    reflection.hidden = !image.currentSrc;
   });
 
   image.addEventListener("error", () => {
     const fallbackCoverUrl = card.dataset.fallbackCover || "";
     if (fallbackCoverUrl && image.src !== fallbackCoverUrl) {
       image.src = fallbackCoverUrl;
+      reflectionImage.src = fallbackCoverUrl;
       return;
     }
     placeholder.hidden = false;
+    reflection.hidden = true;
+  });
+
+  reflectionImage.addEventListener("error", () => {
+    reflection.hidden = true;
   });
 
   card.addEventListener("click", () => {
@@ -388,46 +447,56 @@ function createCoverCard() {
     render();
   });
 
-  return { card, image, placeholder, genre, title, artist };
+  return { frame, card, image, reflection, reflectionImage, placeholder, genre, title, artist };
 }
 
 function updateCoverCard(entry, record, index, offset) {
-  const { card, image, placeholder, genre, title, artist } = entry;
-  const isNewCard = !card.isConnected;
-  const preferredCoverUrl = record.coverUrl || record.thumbUrl || "";
+  const { frame, card, image, reflection, reflectionImage, placeholder, genre, title, artist } = entry;
+  const isNewCard = !frame.isConnected;
+  const preferredCoverUrl = resolveCoverUrl(record.coverUrl || record.thumbUrl || "");
   const fallbackCoverUrl =
-    preferredCoverUrl && record.thumbUrl && record.thumbUrl !== preferredCoverUrl
-      ? record.thumbUrl
+    preferredCoverUrl && record.thumbUrl && resolveCoverUrl(record.thumbUrl) !== preferredCoverUrl
+      ? resolveCoverUrl(record.thumbUrl)
       : "";
 
   card.dataset.index = String(index);
   card.dataset.fallbackCover = fallbackCoverUrl;
   card.setAttribute("aria-label", `${record.artist} - ${record.title}`);
-  card.classList.toggle("cover-card--active", offset === 0);
-  card.classList.toggle("cover-card--side", offset !== 0);
+  const distance = Math.abs(offset);
+  frame.classList.toggle("cover-frame--active", distance === 0);
+  frame.classList.toggle("cover-frame--near", distance === 1);
+  frame.classList.toggle("cover-frame--far", distance >= 2);
+  frame.classList.toggle("cover-frame--side", distance >= 1);
+  card.classList.toggle("cover-card--active", distance === 0);
+  card.classList.toggle("cover-card--near", distance === 1);
+  card.classList.toggle("cover-card--far", distance >= 2);
+  card.classList.toggle("cover-card--side", distance >= 1);
 
-  card.style.zIndex = String(200 - Math.abs(offset));
-  card.style.transformOrigin =
+  frame.style.zIndex = String(200 - distance);
+  frame.style.transformOrigin =
     offset < 0 ? "100% 50%" : offset > 0 ? "0% 50%" : "50% 50%";
-  card.style.transitionDelay = `${Math.min(Math.abs(offset) * 18, 72)}ms`;
+  frame.style.transitionDelay = `${Math.min(distance * 18, 72)}ms`;
 
   const nextTransform = coverTransform(offset);
   const nextOpacity = String(coverOpacity(offset));
   const nextFilter = coverFilter(offset);
 
   if (isNewCard) {
-    card.style.transform = `${nextTransform} scale(0.94)`;
-    card.style.opacity = "0";
+    frame.style.transform = `${nextTransform} scale(0.94)`;
+    frame.style.opacity = "0";
     card.style.filter = "saturate(0.55) brightness(0.58)";
+    reflectionImage.style.filter = "saturate(0.55) brightness(0.58)";
     requestAnimationFrame(() => {
-      card.style.transform = nextTransform;
-      card.style.opacity = nextOpacity;
+      frame.style.transform = nextTransform;
+      frame.style.opacity = nextOpacity;
       card.style.filter = nextFilter;
+      reflectionImage.style.filter = nextFilter;
     });
   } else {
-    card.style.transform = nextTransform;
-    card.style.opacity = nextOpacity;
+    frame.style.transform = nextTransform;
+    frame.style.opacity = nextOpacity;
     card.style.filter = nextFilter;
+    reflectionImage.style.filter = nextFilter;
   }
 
   genre.textContent = getGenresForRecord(record)[0] || record.genre || "Collection";
@@ -439,12 +508,17 @@ function updateCoverCard(entry, record, index, offset) {
     card.dataset.coverSrc = preferredCoverUrl;
     if (preferredCoverUrl) {
       placeholder.hidden = false;
+      reflection.hidden = false;
       image.src = preferredCoverUrl;
+      reflectionImage.src = preferredCoverUrl;
     } else {
       image.removeAttribute("src");
+      reflectionImage.removeAttribute("src");
+      reflection.hidden = true;
       placeholder.hidden = false;
     }
   } else if (!preferredCoverUrl) {
+    reflection.hidden = true;
     placeholder.hidden = false;
   }
 }
@@ -457,7 +531,9 @@ function renderAlbumPanel() {
     elements.albumTitle.textContent = "No record selected";
     elements.albumArtist.textContent = "Adjust the filters to bring the archive back.";
     elements.albumMeta.textContent = "Genre • Style • Year • Label";
-    elements.albumNotes.textContent = "The notes will appear here once a record is selected.";
+    if (elements.albumNotes) {
+      elements.albumNotes.textContent = "The notes will appear here once a record is selected.";
+    }
     setListenLinks(null);
     hideDiscogsLink();
     renderTracklist([]);
@@ -468,7 +544,9 @@ function renderAlbumPanel() {
   elements.albumTitle.textContent = record.title;
   elements.albumArtist.textContent = record.artist;
   elements.albumMeta.textContent = buildMetaLine(record);
-  elements.albumNotes.textContent = record.notes || "No notes recorded yet.";
+  if (elements.albumNotes) {
+    elements.albumNotes.textContent = record.notes || "No notes recorded yet.";
+  }
 
   setListenLinks(record);
 
@@ -588,6 +666,25 @@ function discogsAbsoluteUrl(value) {
   }
 
   return `https://www.discogs.com${value}`;
+}
+
+function resolveCoverUrl(value) {
+  const url = String(value || "").trim();
+  if (!url) {
+    return "";
+  }
+
+  // The repo doesn't include /covers assets, so local previews on localhost
+  // borrow the already-published cover files from shibu.pro.
+  if (isLocalPreviewHost() && url.startsWith("/vinilos/covers/")) {
+    return `https://shibu.pro${url}`;
+  }
+
+  return url;
+}
+
+function isLocalPreviewHost() {
+  return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 }
 
 function coverTransform(offset) {
@@ -752,5 +849,232 @@ async function updatePlayer(record) {
   } catch(e) {
     const ytSearch = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query);
     wrap.innerHTML = '<div class="player-not-found"><a href="' + ytSearch + '" target="_blank" rel="noreferrer" style="color:inherit;text-decoration:underline">Buscar en YouTube ↗</a></div>';
+  }
+}
+
+function initTuningPanel() {
+  if (!isLocalPreviewHost() || !elements.tuningPanel) {
+    return;
+  }
+
+  elements.tuningPanel.hidden = false;
+
+  const savedValues = loadReflectionTuning();
+  const tuningValues = { ...REFLECTION_TUNING_DEFAULTS, ...savedValues };
+
+  elements.tuningInputs.forEach((input) => {
+    const key = input.dataset.tuningKey;
+    if (!key || !(key in tuningValues)) {
+      return;
+    }
+
+    input.value = String(tuningValues[key]);
+    input.addEventListener("input", handleTuningInput);
+  });
+
+  elements.tuningCopy?.addEventListener("click", copyTuningValues);
+  elements.tuningReset?.addEventListener("click", resetTuningValues);
+
+  applyReflectionTuning(tuningValues);
+}
+
+function handleTuningInput() {
+  const tuningValues = readTuningValuesFromControls();
+  saveReflectionTuning(tuningValues);
+  applyReflectionTuning(tuningValues);
+}
+
+function resetTuningValues() {
+  elements.tuningInputs.forEach((input) => {
+    const key = input.dataset.tuningKey;
+    if (!key || !(key in REFLECTION_TUNING_DEFAULTS)) {
+      return;
+    }
+
+    input.value = String(REFLECTION_TUNING_DEFAULTS[key]);
+  });
+
+  localStorage.removeItem(REFLECTION_TUNING_STORAGE_KEY);
+  applyReflectionTuning(REFLECTION_TUNING_DEFAULTS);
+}
+
+async function copyTuningValues() {
+  if (!elements.tuningOutput) {
+    return;
+  }
+
+  const text = elements.tuningOutput.value;
+  elements.tuningOutput.focus();
+  elements.tuningOutput.select();
+
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (error) {
+    console.warn("Unable to copy tuning values automatically.", error);
+  }
+}
+
+function readTuningValuesFromControls() {
+  const values = { ...REFLECTION_TUNING_DEFAULTS };
+
+  elements.tuningInputs.forEach((input) => {
+    const key = input.dataset.tuningKey;
+    if (!key || !(key in values)) {
+      return;
+    }
+
+    values[key] = input.type === "color" ? input.value : Number(input.value);
+  });
+
+  return values;
+}
+
+function applyReflectionTuning(values) {
+  const rootStyle = document.documentElement.style;
+  rootStyle.setProperty("--background-glow-color-rgb", hexToRgbChannels(values.backgroundGlowColor));
+  rootStyle.setProperty("--background-glow-strength", String(values.backgroundGlowStrength));
+  rootStyle.setProperty("--background-glow-blur", `${values.backgroundGlowBlur}px`);
+  rootStyle.setProperty("--background-glow-x", `${values.backgroundGlowX}%`);
+  rootStyle.setProperty("--background-glow-y", `${values.backgroundGlowY}%`);
+  rootStyle.setProperty("--background-vignette", String(values.backgroundVignette));
+  rootStyle.setProperty("--reflection-opacity-master", String(values.reflectionOpacity));
+  rootStyle.setProperty(
+    "--reflection-opacity-active",
+    String(roundNumber(values.reflectionOpacity * values.centerReflectionOpacity, 3))
+  );
+  rootStyle.setProperty(
+    "--reflection-opacity-near",
+    String(roundNumber(values.reflectionOpacity * values.nearReflectionOpacity, 3))
+  );
+  rootStyle.setProperty(
+    "--reflection-opacity-far",
+    String(roundNumber(values.reflectionOpacity * values.farReflectionOpacity, 3))
+  );
+  rootStyle.setProperty("--reflection-blur-active", `${values.centerReflectionBlur}px`);
+  rootStyle.setProperty("--reflection-blur-near", `${values.nearReflectionBlur}px`);
+  rootStyle.setProperty("--reflection-blur-far", `${values.farReflectionBlur}px`);
+  rootStyle.setProperty(
+    "--reflection-glow-opacity-active",
+    String(roundNumber(Math.min(0.52, values.centerReflectionBlur / 18) * values.reflectionOpacity * values.centerReflectionOpacity, 3))
+  );
+  rootStyle.setProperty(
+    "--reflection-glow-opacity-near",
+    String(roundNumber(Math.min(0.52, values.nearReflectionBlur / 18) * values.reflectionOpacity * values.nearReflectionOpacity, 3))
+  );
+  rootStyle.setProperty(
+    "--reflection-glow-opacity-far",
+    String(roundNumber(Math.min(0.52, values.farReflectionBlur / 18) * values.reflectionOpacity * values.farReflectionOpacity, 3))
+  );
+  const activeStrength = values.activeStrength;
+  const sideStrength = values.sideStrength;
+
+  rootStyle.setProperty("--reflection-fade-height", `${values.fadeHeight}%`);
+  rootStyle.setProperty("--reflection-fade-blur", `${values.fadeBlur}px`);
+  rootStyle.setProperty("--reflection-fade-top", String(values.fadeTop));
+  rootStyle.setProperty("--reflection-fade-mid", String(values.fadeMid));
+  rootStyle.setProperty("--reflection-fade-bottom", String(values.fadeBottom));
+  rootStyle.setProperty("--reflection-fade-edge-dark", String(values.edgeDark));
+  rootStyle.setProperty("--reflection-fade-edge-soft", String(roundNumber(Math.max(0, values.edgeDark * 0.22), 3)));
+  rootStyle.setProperty("--reflection-fade-center-dark", String(values.centerDark));
+  rootStyle.setProperty("--reflection-fade-center-peak", String(roundNumber(Math.min(0.3, values.centerDark + 0.05), 3)));
+  rootStyle.setProperty("--reflection-gap-active", `${values.activeGap}px`);
+  rootStyle.setProperty("--reflection-gap-side", `${values.sideGap}px`);
+  rootStyle.setProperty("--reflection-active-start", String(activeStrength));
+  rootStyle.setProperty("--reflection-active-secondary", String(roundNumber(activeStrength / 2, 4)));
+  rootStyle.setProperty("--reflection-side-start", String(sideStrength));
+
+  updateTuningOutputs(values);
+}
+
+function updateTuningOutputs(values) {
+  const labels = {
+    backgroundGlowColor: String(values.backgroundGlowColor).toUpperCase(),
+    backgroundGlowStrength: formatTuningNumber(values.backgroundGlowStrength, 2),
+    backgroundGlowBlur: `${values.backgroundGlowBlur}px`,
+    backgroundGlowX: `${values.backgroundGlowX}%`,
+    backgroundGlowY: `${values.backgroundGlowY}%`,
+    backgroundVignette: formatTuningNumber(values.backgroundVignette, 2),
+    reflectionOpacity: formatTuningNumber(values.reflectionOpacity, 2),
+    centerReflectionOpacity: formatTuningNumber(values.centerReflectionOpacity, 2),
+    nearReflectionOpacity: formatTuningNumber(values.nearReflectionOpacity, 2),
+    farReflectionOpacity: formatTuningNumber(values.farReflectionOpacity, 2),
+    centerReflectionBlur: `${values.centerReflectionBlur}px`,
+    nearReflectionBlur: `${values.nearReflectionBlur}px`,
+    farReflectionBlur: `${values.farReflectionBlur}px`,
+    activeStrength: formatTuningNumber(values.activeStrength, 4),
+    sideStrength: formatTuningNumber(values.sideStrength, 4),
+    activeGap: `${values.activeGap}px`,
+    sideGap: `${values.sideGap}px`,
+    fadeHeight: `${values.fadeHeight}%`,
+    fadeBlur: `${values.fadeBlur}px`,
+    fadeTop: formatTuningNumber(values.fadeTop, 3),
+    fadeMid: formatTuningNumber(values.fadeMid, 3),
+    fadeBottom: formatTuningNumber(values.fadeBottom, 3),
+    edgeDark: formatTuningNumber(values.edgeDark, 3),
+    centerDark: formatTuningNumber(values.centerDark, 3),
+  };
+
+  elements.tuningOutputs.forEach((output) => {
+    const key = output.dataset.tuningOutput;
+    if (!key || !(key in labels)) {
+      return;
+    }
+    output.textContent = labels[key];
+  });
+
+  if (elements.tuningOutput) {
+    elements.tuningOutput.value = JSON.stringify(values, null, 2);
+  }
+}
+
+function formatTuningNumber(value, digits) {
+  return Number(value).toFixed(digits);
+}
+
+function roundNumber(value, digits) {
+  const multiplier = 10 ** digits;
+  return Math.round(value * multiplier) / multiplier;
+}
+
+function hexToRgbChannels(value) {
+  const normalized = String(value || "").trim().replace("#", "");
+  if (!normalized) {
+    return "0 0 0";
+  }
+
+  const hex =
+    normalized.length === 3
+      ? normalized
+          .split("")
+          .map((character) => character + character)
+          .join("")
+      : normalized.slice(0, 6);
+
+  const red = Number.parseInt(hex.slice(0, 2), 16);
+  const green = Number.parseInt(hex.slice(2, 4), 16);
+  const blue = Number.parseInt(hex.slice(4, 6), 16);
+
+  if ([red, green, blue].some((channel) => Number.isNaN(channel))) {
+    return "0 0 0";
+  }
+
+  return `${red} ${green} ${blue}`;
+}
+
+function loadReflectionTuning() {
+  try {
+    const raw = localStorage.getItem(REFLECTION_TUNING_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (error) {
+    console.warn("Unable to read saved tuning values.", error);
+    return {};
+  }
+}
+
+function saveReflectionTuning(values) {
+  try {
+    localStorage.setItem(REFLECTION_TUNING_STORAGE_KEY, JSON.stringify(values));
+  } catch (error) {
+    console.warn("Unable to save tuning values.", error);
   }
 }

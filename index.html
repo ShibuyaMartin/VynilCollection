@@ -14,8 +14,8 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
     >
-    <link rel="stylesheet" href="./styles.css?v=1775263773">
-    <script type="module" src="./app.js?v=1775263830"></script>
+    <link rel="stylesheet" href="./styles.css?v=1775273642">
+    <script type="module" src="./app.js?v=1775273642"></script>
     <meta property="og:title" content="Vinilos Shibu">
 </head>
   <body>
@@ -35,6 +35,7 @@
 
       <main class="experience-shell">
         <section class="gallery-shell">
+          <div class="gallery-ambience" aria-hidden="true"></div>
           <div class="gallery-stage" id="gallery-stage" aria-label="Cover flow vinyl gallery">
             <div class="cover-layer" id="cover-layer"></div>
 
@@ -106,6 +107,162 @@
           </div>
         </section>
       </main>
+
+      <details class="tuning-panel" id="tuning-panel" hidden>
+        <summary>Scene Tuning</summary>
+        <div class="tuning-grid">
+          <label class="tuning-field">
+            <span>Background Color</span>
+            <input data-tuning-key="backgroundGlowColor" type="color">
+            <output data-tuning-output="backgroundGlowColor"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Background Glow</span>
+            <input data-tuning-key="backgroundGlowStrength" type="range" min="0" max="0.8" step="0.01">
+            <output data-tuning-output="backgroundGlowStrength"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Background Blur</span>
+            <input data-tuning-key="backgroundGlowBlur" type="range" min="0" max="240" step="1">
+            <output data-tuning-output="backgroundGlowBlur"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Background X</span>
+            <input data-tuning-key="backgroundGlowX" type="range" min="0" max="100" step="1">
+            <output data-tuning-output="backgroundGlowX"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Background Y</span>
+            <input data-tuning-key="backgroundGlowY" type="range" min="-20" max="90" step="1">
+            <output data-tuning-output="backgroundGlowY"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Background Vignette</span>
+            <input data-tuning-key="backgroundVignette" type="range" min="0" max="1" step="0.01">
+            <output data-tuning-output="backgroundVignette"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Reflection Opacity</span>
+            <input data-tuning-key="reflectionOpacity" type="range" min="0" max="1" step="0.01">
+            <output data-tuning-output="reflectionOpacity"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Center Opacity</span>
+            <input data-tuning-key="centerReflectionOpacity" type="range" min="0" max="1" step="0.01">
+            <output data-tuning-output="centerReflectionOpacity"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Near Opacity</span>
+            <input data-tuning-key="nearReflectionOpacity" type="range" min="0" max="1" step="0.01">
+            <output data-tuning-output="nearReflectionOpacity"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Far Opacity</span>
+            <input data-tuning-key="farReflectionOpacity" type="range" min="0" max="1" step="0.01">
+            <output data-tuning-output="farReflectionOpacity"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Center Blur</span>
+            <input data-tuning-key="centerReflectionBlur" type="range" min="0" max="24" step="1">
+            <output data-tuning-output="centerReflectionBlur"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Near Blur</span>
+            <input data-tuning-key="nearReflectionBlur" type="range" min="0" max="24" step="1">
+            <output data-tuning-output="nearReflectionBlur"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Far Blur</span>
+            <input data-tuning-key="farReflectionBlur" type="range" min="0" max="24" step="1">
+            <output data-tuning-output="farReflectionBlur"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Active Strength</span>
+            <input data-tuning-key="activeStrength" type="range" min="0" max="0.012" step="0.0005">
+            <output data-tuning-output="activeStrength"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Side Strength</span>
+            <input data-tuning-key="sideStrength" type="range" min="0" max="0.006" step="0.0005">
+            <output data-tuning-output="sideStrength"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Active Gap</span>
+            <input data-tuning-key="activeGap" type="range" min="0" max="24" step="1">
+            <output data-tuning-output="activeGap"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Side Gap</span>
+            <input data-tuning-key="sideGap" type="range" min="0" max="24" step="1">
+            <output data-tuning-output="sideGap"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Fade Height</span>
+            <input data-tuning-key="fadeHeight" type="range" min="8" max="30" step="1">
+            <output data-tuning-output="fadeHeight"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Fade Blur</span>
+            <input data-tuning-key="fadeBlur" type="range" min="0" max="18" step="1">
+            <output data-tuning-output="fadeBlur"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Fade Top</span>
+            <input data-tuning-key="fadeTop" type="range" min="0" max="0.25" step="0.01">
+            <output data-tuning-output="fadeTop"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Fade Mid</span>
+            <input data-tuning-key="fadeMid" type="range" min="0.2" max="0.9" step="0.01">
+            <output data-tuning-output="fadeMid"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Fade Bottom</span>
+            <input data-tuning-key="fadeBottom" type="range" min="0" max="0.7" step="0.01">
+            <output data-tuning-output="fadeBottom"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Edge Fade</span>
+            <input data-tuning-key="edgeDark" type="range" min="0.4" max="1" step="0.01">
+            <output data-tuning-output="edgeDark"></output>
+          </label>
+
+          <label class="tuning-field">
+            <span>Center Fade</span>
+            <input data-tuning-key="centerDark" type="range" min="0" max="0.3" step="0.01">
+            <output data-tuning-output="centerDark"></output>
+          </label>
+        </div>
+
+        <textarea class="tuning-output" id="tuning-output" readonly></textarea>
+
+        <div class="tuning-actions">
+          <button class="tuning-button" id="tuning-copy" type="button">Copy values</button>
+          <button class="tuning-button tuning-button--ghost" id="tuning-reset" type="button">Reset</button>
+        </div>
+      </details>
     </div>
   </body>
 </html>
