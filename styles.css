@@ -711,28 +711,6 @@ body::before {
   pointer-events: none;
 }
 
-.notes-card {
-  margin-top: 1.6rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.notes-card__label {
-  margin: 0 0 0.45rem;
-  color: var(--text-dim);
-  font-size: 0.68rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  font-family: var(--font-sans);
-}
-
-.notes-card__copy {
-  margin: 0;
-  color: var(--text-soft);
-  line-height: 1.65;
-  font-family: var(--font-sans);
-}
-
 .section-heading {
   display: flex;
   justify-content: space-between;

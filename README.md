@@ -20,11 +20,13 @@ python3 ./scripts/build_collection.py \
 ## Run the page locally
 
 ```bash
-cd /Users/martinshibuya/Documents/GitHub/MyVynilCollection
+cd /Users/martinshibuya/Documents/GitHub/MyVynilCollection/VynilCollection
 python3 -m http.server 4173
 ```
 
 Then open [http://localhost:4173](http://localhost:4173).
+
+The app works both at the web root and under `/vinilos`, so the same build can be used locally, on GitHub Pages-style hosting, or on Vercel.
 
 ## Optional: attach real Discogs covers
 
@@ -47,3 +49,13 @@ To fetch tracklists for the records that already matched Discogs:
 DISCOGS_USER_TOKEN=your_token_here \
 python3 ./scripts/hydrate_discogs_details.py ./data/collection.json
 ```
+
+To materialize local cover files into `./covers` so they can be committed and deployed with the site:
+
+```bash
+python3 ./scripts/materialize_covers.py ./data/collection.json
+```
+
+## Deploy
+
+This repo is ready to deploy as a static site on Vercel. The important part is that `covers/` is versioned, so the deploy does not depend on Discogs or other remote image hosts at runtime.

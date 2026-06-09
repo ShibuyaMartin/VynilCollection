@@ -14,7 +14,8 @@ const interaction = {
   suppressClickUntil: 0,
 };
 
-const DATA_VERSION = "1775277600";
+const DATA_VERSION = "1781021000";
+const APP_BASE_PATH = resolveAppBasePath();
 const SCENE_TUNING_STORAGE_KEY = "vinilos-scene-tuning";
 const LEGACY_SCENE_TUNING_STORAGE_KEY = "vinilos-reflection-tuning";
 
@@ -46,6 +47,7 @@ const SCENE_TUNING_DEFAULTS = {
 };
 
 const coverCardCache = new Map();
+const failedCoverUrls = new Set();
 
 const elements = {
   searchToggle: document.querySelector("#search-toggle"),
@@ -90,7 +92,7 @@ init().catch((error) => {
 });
 
 async function init() {
-  const response = await fetch(`/vinilos/data/collection.json?v=${DATA_VERSION}`);
+  const response = await fetch(appUrl(`/data/collection.json?v=${DATA_VERSION}`));
   if (!response.ok) {
     throw new Error(`Failed to load collection.json (${response.status})`);
   }
@@ -478,15 +480,18 @@ function createCoverCard() {
   image.addEventListener("error", () => {
     const fallbackCoverUrl = card.dataset.fallbackCover || "";
     if (fallbackCoverUrl && image.src !== fallbackCoverUrl) {
+      failedCoverUrls.add(image.currentSrc || image.src);
       image.src = fallbackCoverUrl;
       reflectionImage.src = fallbackCoverUrl;
       return;
     }
+    failedCoverUrls.add(image.currentSrc || image.src);
     placeholder.hidden = false;
     reflection.hidden = true;
   });
 
   reflectionImage.addEventListener("error", () => {
+    failedCoverUrls.add(reflectionImage.currentSrc || reflectionImage.src);
     reflection.hidden = true;
   });
 
@@ -510,10 +515,12 @@ function updateCoverCard(entry, record, index, offset) {
   const { frame, card, image, reflection, reflectionImage, placeholder, genre, title, artist } = entry;
   const isNewCard = !frame.isConnected;
   const previousOffset = Number(card.dataset.offset || "NaN");
-  const preferredCoverUrl = resolveCoverUrl(record.coverUrl || record.thumbUrl || "");
+  const preferredCoverUrl = resolveCoverUrl(record.coverUrl || record.thumbUrl || "", record, "cover");
   const fallbackCoverUrl =
-    preferredCoverUrl && record.thumbUrl && resolveCoverUrl(record.thumbUrl) !== preferredCoverUrl
-      ? resolveCoverUrl(record.thumbUrl)
+    preferredCoverUrl &&
+    record.thumbUrl &&
+    resolveCoverUrl(record.thumbUrl, record, "thumb") !== preferredCoverUrl
+      ? resolveCoverUrl(record.thumbUrl, record, "thumb")
       : "";
 
   card.dataset.index = String(index);
@@ -564,20 +571,25 @@ function updateCoverCard(entry, record, index, offset) {
   artist.textContent = record.artist;
   image.alt = `${record.artist} - ${record.title}`;
 
-  if (card.dataset.coverSrc !== preferredCoverUrl) {
-    card.dataset.coverSrc = preferredCoverUrl;
-    if (preferredCoverUrl) {
+  const selectedCoverUrl = failedCoverUrls.has(preferredCoverUrl) ? fallbackCoverUrl : preferredCoverUrl;
+  const selectedFallbackUrl =
+    selectedCoverUrl && selectedCoverUrl === fallbackCoverUrl ? "" : fallbackCoverUrl;
+
+  if (card.dataset.coverSrc !== selectedCoverUrl || card.dataset.fallbackCover !== selectedFallbackUrl) {
+    card.dataset.coverSrc = selectedCoverUrl;
+    card.dataset.fallbackCover = selectedFallbackUrl;
+    if (selectedCoverUrl) {
       placeholder.hidden = false;
       reflection.hidden = false;
-      image.src = preferredCoverUrl;
-      reflectionImage.src = preferredCoverUrl;
+      image.src = selectedCoverUrl;
+      reflectionImage.src = selectedCoverUrl;
     } else {
       image.removeAttribute("src");
       reflectionImage.removeAttribute("src");
       reflection.hidden = true;
       placeholder.hidden = false;
     }
-  } else if (!preferredCoverUrl) {
+  } else if (!selectedCoverUrl) {
     reflection.hidden = true;
     placeholder.hidden = false;
   }
@@ -639,8 +651,9 @@ function renderAlbumPanel() {
 
   setListenLinks(record);
 
-  if (record.discogsUrl) {
-    elements.discogsLink.href = discogsAbsoluteUrl(record.discogsCanonicalUrl || record.discogsUrl);
+  const discogsTargetUrl = record.discogsMasterUrl || record.discogsUrl || record.discogsCanonicalUrl;
+  if (discogsTargetUrl) {
+    elements.discogsLink.href = discogsAbsoluteUrl(discogsTargetUrl);
     elements.discogsLink.hidden = false;
     elements.discogsLink.classList.remove("is-disabled");
   } else {
@@ -763,19 +776,81 @@ function discogsAbsoluteUrl(value) {
   return `https://www.discogs.com${value}`;
 }
 
-function resolveCoverUrl(value) {
+function resolveCoverUrl(value, record = null, variant = "cover") {
   const url = String(value || "").trim();
   if (!url) {
     return "";
   }
 
-  // The repo doesn't include /covers assets, so local previews on localhost
-  // borrow the already-published cover files from shibu.pro.
-  if (isLocalPreviewHost() && url.startsWith("/vinilos/covers/")) {
-    return `https://shibu.pro${url}`;
+  if (url.startsWith("/vinilos/")) {
+    return withCacheVersion(normalizeLegacyVinilosPath(url), record, variant);
+  }
+
+  // Local previews proxy remote images through the preview server so
+  // Discogs/Juno/shibu covers stay visible even when those origins block
+  // direct browser requests.
+  if (isLocalPreviewHost()) {
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      const resolvedUrl = shouldProxyCoverUrl(url) ? localPreviewProxyUrl(url) : url;
+      return withCacheVersion(resolvedUrl, record, variant);
+    }
   }
 
   return url;
+}
+
+function localPreviewProxyUrl(url) {
+  return appUrl(`/cover-proxy?url=${encodeURIComponent(url)}`);
+}
+
+function resolveAppBasePath() {
+  const path = window.location.pathname || "/";
+  return path === "/vinilos" || path.startsWith("/vinilos/") ? "/vinilos" : "";
+}
+
+function appUrl(path) {
+  if (!path) {
+    return APP_BASE_PATH || "";
+  }
+
+  if (/^https?:\/\//.test(path)) {
+    return path;
+  }
+
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return `${APP_BASE_PATH}${normalized}`;
+}
+
+function normalizeLegacyVinilosPath(path) {
+  return appUrl(path.slice("/vinilos".length));
+}
+
+function shouldProxyCoverUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname.endsWith("discogs.com");
+  } catch {
+    return false;
+  }
+}
+
+function withCacheVersion(url, record, variant) {
+  if (!record) {
+    return url;
+  }
+
+  const separator = url.includes("?") ? "&" : "?";
+  const version = [
+    DATA_VERSION,
+    record.number || "",
+    record.discogsReleaseId || "",
+    record.discogsCanonicalUrl || record.discogsUrl || "",
+    variant,
+  ]
+    .filter(Boolean)
+    .join(":");
+
+  return `${url}${separator}v=${encodeURIComponent(version)}`;
 }
 
 function isLocalPreviewHost() {
@@ -912,9 +987,6 @@ function qualityScore(record) {
     score += 2;
   }
   if (record.discogsStyles?.length) {
-    score += 1;
-  }
-  if (record.notes) {
     score += 1;
   }
   return score;

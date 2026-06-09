@@ -97,20 +97,27 @@ def main() -> None:
         processed += 1
 
         if match:
-            previous_url = record.get("discogsUrl")
+            previous_release_url = (
+                record.get("discogsReleaseUrl")
+                or record.get("discogsCanonicalUrl")
+                or record.get("discogsUrl")
+            )
             record["coverUrl"] = match["cover_url"]
             record["thumbUrl"] = match["thumb_url"]
-            record["discogsUrl"] = match["discogs_url"]
+            record["discogsUrl"] = match.get("master_url") or match["discogs_url"]
             record["matchScore"] = match["score"]
             record["discogsSearchFormats"] = match["formats"]
             record["discogsCanonicalUrl"] = match["discogs_url"]
+            record["discogsReleaseUrl"] = match["discogs_url"]
+            record["discogsMasterId"] = match.get("master_id", "")
+            record["discogsMasterUrl"] = match.get("master_url", "")
             record["discogsFormats"] = match["formats"]
             record["discogsMediaType"] = match.get("media_type", "")
             record["discogsIsVinyl"] = bool(match.get("is_vinyl"))
             record["discogsGenres"] = match.get("genres", [])
             record["discogsStyles"] = match.get("styles", [])
 
-            if previous_url != match["discogs_url"]:
+            if previous_release_url != match["discogs_url"]:
                 record.pop("tracklist", None)
                 record.pop("discogsReleaseId", None)
             matched += 1
@@ -173,6 +180,18 @@ def search_best_match(record: Dict[str, object], token: str) -> Dict[str, object
                 candidate["cover_url"] = cover_url
                 candidate["thumb_url"] = thumb_url or cover_url
                 candidate["discogs_url"] = canonical_discogs_url(details.get("uri") or candidate["discogs_url"])
+                master_id = str(candidate.get("master_id") or details.get("master_id") or "").strip()
+                master_url = ""
+                if master_id:
+                    if master_id not in masters_cache:
+                        masters_cache[master_id] = fetch_master_details(master_id, token)
+                    master_details = masters_cache[master_id]
+                    if master_details and master_details.get("uri"):
+                        master_url = canonical_discogs_url(str(master_details.get("uri")))
+                    else:
+                        master_url = canonical_discogs_url(f"/master/{master_id}")
+                candidate["master_id"] = master_id
+                candidate["master_url"] = master_url
                 candidate["formats"] = flatten_formats(formats) or candidate["formats"]
                 candidate["media_type"] = primary_media_type(formats)
                 candidate["is_vinyl"] = True
@@ -199,7 +218,10 @@ def clear_discogs_data(record: Dict[str, object]) -> None:
         "discogsSearchFormats",
         "tracklist",
         "discogsCanonicalUrl",
+        "discogsReleaseUrl",
         "discogsReleaseId",
+        "discogsMasterId",
+        "discogsMasterUrl",
         "discogsFormats",
         "discogsMediaType",
         "discogsIsVinyl",
@@ -219,15 +241,48 @@ def build_queries(record: Dict[str, object], result_type: str = "release") -> Li
     artist_variants = artist_query_variants(str(record.get("artist", "")))
     title_variants = title_query_variants(str(record.get("title", "")))
     year = str(record.get("yearSort") or "").strip()
+    label = re.sub(r"\s+", " ", str(record.get("label", "") or "")).strip()
+    catalog_number = str(record.get("catalogNumber", "") or "").strip()
+    compact_catalog_number = re.sub(r"\s+", "", catalog_number)
 
     queries: List[Dict[str, str]] = []
-    for query_title in title_variants:
-        base: Dict[str, str] = {
-            "type": result_type,
-            "per_page": "50",
-            "format": "Vinyl",
-        }
+    base: Dict[str, str] = {
+        "type": result_type,
+        "per_page": "50",
+        "format": "Vinyl",
+    }
 
+    if normalize_catalog(catalog_number):
+        catalog_variants = unique_nonempty([catalog_number, compact_catalog_number])
+        primary_title = title_variants[0] if title_variants else ""
+
+        for catalog_variant in catalog_variants:
+            query = {**base, "catno": catalog_variant}
+            if label and normalize_text(label) not in MISSING_MARKERS:
+                query["label"] = label
+            queries.append(query)
+
+            if primary_title:
+                queries.append({**query, "release_title": primary_title})
+
+            if artist_variants:
+                for artist in artist_variants[:3]:
+                    detailed_query = {**query, "artist": artist}
+                    if primary_title:
+                        detailed_query["release_title"] = primary_title
+                    if year:
+                        detailed_query["year"] = year
+                    queries.append(detailed_query)
+
+                    freeform_query = " ".join(
+                        part
+                        for part in [artist, primary_title, label, catalog_variant]
+                        if part and normalize_text(part) not in MISSING_MARKERS
+                    )
+                    if freeform_query:
+                        queries.append({**base, "q": freeform_query})
+
+    for query_title in title_variants:
         if artist_variants:
             for artist in artist_variants[:3]:
                 query = {**base, "artist": artist, "release_title": query_title}
