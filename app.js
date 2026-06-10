@@ -1001,7 +1001,7 @@ async function updatePlayer(record) {
   if (!record) {
     currentPlayerQuery = null;
     elements.playerShell.hidden = true;
-    elements.playerWrap.innerHTML = '<div class="player-searching">Buscando...</div>';
+    elements.playerWrap.innerHTML = '<div class="player-searching">Searching...</div>';
     return;
   }
 
@@ -1013,7 +1013,7 @@ async function updatePlayer(record) {
   const pendingQuery = query;
   currentPlayerQuery = query;
   elements.playerShell.hidden = false;
-  elements.playerWrap.innerHTML = '<div class="player-searching">Buscando...</div>';
+  elements.playerWrap.innerHTML = '<div class="player-searching">Searching...</div>';
 
   try {
     const res = await fetch(`/yt-search?q=${encodeURIComponent(query)}`);

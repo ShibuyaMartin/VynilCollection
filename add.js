@@ -68,7 +68,7 @@ async function startScanner() {
     });
   } catch {
     scanError.textContent =
-      "No pude acceder a la cámara. Dale permiso al navegador o escribí el código a mano.";
+      "Could not access the camera. Allow camera access in the browser, or type the code below.";
     return;
   }
 
@@ -77,13 +77,13 @@ async function startScanner() {
   scannerShell.hidden = false;
   startScanButton.hidden = true;
   stopScanButton.hidden = false;
-  scanStatus.textContent = "Apuntá al código de barras";
+  scanStatus.textContent = "Point at the barcode";
 
   let detectFrame;
   try {
     detectFrame = await createDetector();
   } catch {
-    scanError.textContent = "No pude cargar el lector de códigos. Escribí el código a mano.";
+    scanError.textContent = "Could not load the barcode reader. Type the code manually.";
     stopScanner();
     return;
   }
@@ -161,8 +161,8 @@ async function search(query) {
   lastBarcode = isBarcode ? query.replace(/\s/g, "") : "";
 
   candidatesHeading.textContent = isBarcode
-    ? `Buscando código ${query}...`
-    : `Buscando "${query}"...`;
+    ? `Searching barcode ${query}…`
+    : `Searching "${query}"…`;
   candidateList.innerHTML = '<div class="spinner"></div>';
   showStep("candidates");
 
@@ -171,7 +171,7 @@ async function search(query) {
     const param = isBarcode ? `barcode=${encodeURIComponent(lastBarcode)}` : `q=${encodeURIComponent(query)}`;
     data = await fetchJson(apiUrl(`/api/lookup?${param}`));
   } catch (error) {
-    candidatesHeading.textContent = "La búsqueda falló.";
+    candidatesHeading.textContent = "Search failed.";
     candidateList.innerHTML = "";
     renderRetry(error.message);
     return;
@@ -180,13 +180,13 @@ async function search(query) {
   const candidates = data.candidates || [];
   if (!candidates.length) {
     candidatesHeading.textContent = isBarcode
-      ? `Discogs no tiene resultados para el código ${query}. Probá buscar por artista y título.`
-      : `Sin resultados para "${query}".`;
+      ? `No Discogs results for barcode ${query}. Try searching by artist and title.`
+      : `No results for "${query}".`;
     candidateList.innerHTML = "";
     return;
   }
 
-  candidatesHeading.textContent = `${candidates.length} resultado${candidates.length === 1 ? "" : "s"} en Discogs — elegí tu edición:`;
+  candidatesHeading.textContent = `${candidates.length} result${candidates.length === 1 ? "" : "s"} on Discogs — pick your edition:`;
   candidateList.innerHTML = "";
   for (const candidate of candidates) {
     const button = document.createElement("button");
@@ -240,7 +240,7 @@ async function loadRelease(releaseId) {
     selectedRelease = data.release;
   } catch (error) {
     confirmCard.innerHTML = "";
-    confirmError.textContent = `No pude cargar el detalle: ${error.message}`;
+    confirmError.textContent = `Could not load release details: ${error.message}`;
     return;
   }
 
@@ -253,7 +253,7 @@ function renderConfirmCard(release) {
   if (release.coverImage) {
     const img = document.createElement("img");
     img.src = release.coverImage;
-    img.alt = `Tapa de ${release.title}`;
+    img.alt = `${release.title} cover`;
     confirmCard.appendChild(img);
   }
 
@@ -294,13 +294,13 @@ async function addSelectedRelease() {
   const adminToken = storedToken || adminTokenInput.value.trim();
   if (!adminToken) {
     adminTokenRow.hidden = false;
-    confirmError.textContent = "Pegá el token de admin para poder agregar discos.";
+    confirmError.textContent = "Paste the admin token to add records.";
     adminTokenInput.focus();
     return;
   }
 
   confirmAddButton.disabled = true;
-  confirmAddButton.textContent = "Agregando...";
+  confirmAddButton.textContent = "Adding…";
 
   try {
     const response = await fetch(apiUrl("/api/add"), {
@@ -323,7 +323,7 @@ async function addSelectedRelease() {
       localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
       adminTokenRow.hidden = false;
       adminTokenInput.value = "";
-      throw new Error("Token inválido. Pegalo de nuevo y reintentá.");
+      throw new Error("Invalid token. Paste it again and retry.");
     }
     if (response.status === 409 && data.error === "duplicate") {
       throw new Error(data.message);
@@ -338,7 +338,7 @@ async function addSelectedRelease() {
     confirmError.textContent = error.message;
   } finally {
     confirmAddButton.disabled = false;
-    confirmAddButton.textContent = "Agregar a la colección";
+    confirmAddButton.textContent = "Add to collection";
   }
 }
 
@@ -348,17 +348,17 @@ function renderSuccess(data) {
 
   const badge = document.createElement("div");
   badge.className = "badge";
-  badge.textContent = "✅";
+  badge.textContent = "Added";
 
   const heading = document.createElement("h2");
   heading.textContent = `#${data.record.number} — ${data.record.artist} — ${data.record.title}`;
 
   const note = document.createElement("p");
-  note.textContent = data.note || "Agregado a la colección.";
+  note.textContent = data.note || "Added to the collection.";
 
   const link = document.createElement("a");
   link.href = APP_BASE_PATH || "/";
-  link.textContent = "Ver la colección →";
+  link.textContent = "View collection →";
 
   card.append(badge, heading, note, link);
 }
@@ -381,7 +381,7 @@ async function fetchJson(url) {
   try {
     data = await response.json();
   } catch {
-    throw new Error(`El servidor respondió ${response.status}. ¿Está deployada la API?`);
+    throw new Error(`The server responded ${response.status}. Is the API deployed?`);
   }
   if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
   return data;

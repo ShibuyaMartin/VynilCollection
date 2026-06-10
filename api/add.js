@@ -38,7 +38,7 @@ export default async function handler(req, res) {
     if (duplicate && !req.body.allowDuplicate) {
       return res.status(409).json({
         error: "duplicate",
-        message: `Ya está en la colección como #${duplicate.number}: ${duplicate.artist} - ${duplicate.title}`,
+        message: `Already in the collection as #${duplicate.number}: ${duplicate.artist} - ${duplicate.title}`,
         record: { number: duplicate.number, artist: duplicate.artist, title: duplicate.title },
       });
     }
@@ -82,7 +82,7 @@ export default async function handler(req, res) {
         coverUrl: record.coverUrl,
       },
       commitUrl,
-      note: "Vercel va a redeployar el sitio; el disco aparece en ~1 minuto.",
+      note: "Vercel is redeploying the site; the record will show up in about a minute.",
     });
   } catch (error) {
     return res.status(502).json({ error: error.message || "Failed to add record" });
@@ -255,10 +255,11 @@ async function discogsFetch(path) {
 
 function formatArtists(artists, fallback) {
   if (Array.isArray(artists) && artists.length) {
-    return artists
+    // Discogs lists the same artist once per credit, so dedupe by name.
+    const names = artists
       .map((artist) => String(artist.name || "").replace(/\s*\(\d+\)$/, ""))
-      .filter(Boolean)
-      .join(" / ");
+      .filter(Boolean);
+    return [...new Set(names)].join(" / ");
   }
   return String(fallback || "").replace(/\s*\(\d+\)$/, "");
 }

@@ -100,10 +100,11 @@ function normalizeRelease(release) {
 
 function formatArtists(artists, fallback) {
   if (Array.isArray(artists) && artists.length) {
-    return artists
+    // Discogs lists the same artist once per credit, so dedupe by name.
+    const names = artists
       .map((artist) => String(artist.name || "").replace(/\s*\(\d+\)$/, ""))
-      .filter(Boolean)
-      .join(" / ");
+      .filter(Boolean);
+    return [...new Set(names)].join(" / ");
   }
   return String(fallback || "").replace(/\s*\(\d+\)$/, "");
 }
