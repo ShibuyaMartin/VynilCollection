@@ -349,6 +349,12 @@
 
         <button class="primary" id="start-scan" type="button">Scan barcode</button>
         <button class="ghost" id="stop-scan" type="button" hidden>Stop camera</button>
+        <button id="identify-cover" type="button">Identify by cover photo</button>
+        <input id="cover-photo-input" type="file" accept="image/*" capture="environment" hidden>
+        <div id="scan-token-row" hidden>
+          <input id="scan-token-input" name="scan-admin-token" type="password" placeholder="Admin token" autocomplete="off">
+          <p class="hint">Cover identification needs the admin token — the same one used to add records.</p>
+        </div>
 
         <p class="hint">No barcode, or not scanning? Type it below, or search by artist and title:</p>
         <form class="field-row" id="manual-form">
@@ -407,6 +413,6 @@
       </section>
     </div>
 
-    <script type="module" src="./add.js?v=1781135000"></script>
+    <script type="module" src="./add.js?v=1781142000"></script>
   </body>
 </html>
