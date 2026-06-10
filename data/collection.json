@@ -1,7 +1,7 @@
 {
   "collectionName": "🎵 Colección de Vinilos — Martín Shibuya",
-  "generatedAt": "2026-06-10T22:18:20.598Z",
-  "recordCount": 191,
+  "generatedAt": "2026-06-10T22:20:59.120Z",
+  "recordCount": 192,
   "records": [
     {
       "number": "1",
@@ -22367,6 +22367,108 @@
       ],
       "addedVia": "barcode-scan",
       "barcode": "4547366752038"
+    },
+    {
+      "number": "194",
+      "artist": "Haruomi Hosono / Haruomi Hosono / Takahiko Ishikawa / Takahiko Ishikawa / Masataka Matsutoya / Masataka Matsutoya",
+      "title": "エーゲ海 = The Aegean Sea",
+      "year": "1979",
+      "genre": "Electronic / Jazz / Pop / Folk, World, & Country",
+      "label": "CBS/Sony",
+      "catalogNumber": "25AH 506",
+      "country": "Japan",
+      "coverCondition": "NM",
+      "discCondition": "NM",
+      "id": "194-haruomi-hosono-haruomi-hosono-takahiko-ishikawa-takahiko-ishikawa-masataka-matsutoya-masataka-matsutoya-the-aegean-sea",
+      "genreGroups": [
+        "Electronic",
+        "Jazz",
+        "Pop",
+        "Folk, World, & Country"
+      ],
+      "yearSort": 1979,
+      "searchText": "haruomi hosono / haruomi hosono / takahiko ishikawa / takahiko ishikawa / masataka matsutoya / masataka matsutoya エーゲ海 = the aegean sea 1979 electronic / jazz / pop / folk, world, & country cbs/sony 25ah 506 japan ",
+      "coverUrl": "/vinilos/covers/194.jpg",
+      "thumbUrl": "/vinilos/covers/194.jpg",
+      "discogsUrl": "https://www.discogs.com/release/2750252-Haruomi-Hosono-細野晴臣-Takahiko-Ishikawa-石川鷹彦-Masataka-Matsutohya-松任谷正隆-エ",
+      "discogsCanonicalUrl": "https://www.discogs.com/release/2750252-Haruomi-Hosono-細野晴臣-Takahiko-Ishikawa-石川鷹彦-Masataka-Matsutohya-松任谷正隆-エ",
+      "discogsFormats": [
+        "Vinyl",
+        "LP",
+        "Album"
+      ],
+      "discogsMediaType": "Vinyl",
+      "discogsIsVinyl": true,
+      "discogsGenres": [
+        "Electronic",
+        "Jazz",
+        "Pop",
+        "Folk, World, & Country"
+      ],
+      "discogsStyles": [
+        "Easy Listening",
+        "Experimental",
+        "Folk",
+        "Fusion"
+      ],
+      "discogsReleaseId": "2750252",
+      "tracklist": [
+        {
+          "position": "A1.1",
+          "title": "魅せられて",
+          "duration": "",
+          "heading": "エージアン・ファンタジー"
+        },
+        {
+          "position": "A1.2",
+          "title": "アイランド・ガール",
+          "duration": "",
+          "heading": "エージアン・ファンタジー"
+        },
+        {
+          "position": "A2",
+          "title": "アトランティス",
+          "duration": "3:00",
+          "heading": ""
+        },
+        {
+          "position": "A3",
+          "title": "レゲ・エーゲ・ウーマン",
+          "duration": "3:57",
+          "heading": ""
+        },
+        {
+          "position": "A4",
+          "title": "ミコノスの花嫁",
+          "duration": "3:58",
+          "heading": ""
+        },
+        {
+          "position": "B1",
+          "title": "イマージュ",
+          "duration": "6:52",
+          "heading": ""
+        },
+        {
+          "position": "B2",
+          "title": "波間の薔薇",
+          "duration": "5:21",
+          "heading": ""
+        },
+        {
+          "position": "B3",
+          "title": "デイ・ブレイク",
+          "duration": "4:24",
+          "heading": ""
+        },
+        {
+          "position": "B4",
+          "title": "アプロディーテの嘆き",
+          "duration": "3:52",
+          "heading": ""
+        }
+      ],
+      "addedVia": "barcode-scan"
     }
   ],
   "gradingGuide": [
