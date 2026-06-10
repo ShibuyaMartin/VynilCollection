@@ -1,7 +1,7 @@
 {
   "collectionName": "🎵 Colección de Vinilos — Martín Shibuya",
-  "generatedAt": "2026-06-04T15:47:16.586283+00:00",
-  "recordCount": 190,
+  "generatedAt": "2026-06-10T22:18:20.598Z",
+  "recordCount": 191,
   "records": [
     {
       "number": "1",
@@ -16301,7 +16301,7 @@
       "coverUrl": "/vinilos/covers/145.jpg",
       "thumbUrl": "/vinilos/covers/145.jpg",
       "discogsUrl": "https://www.discogs.com/master/3673347-Milan-W-Leave-Another-Day",
-      "matchScore": 1.0,
+      "matchScore": 1,
       "discogsSearchFormats": [
         "Vinyl",
         "LP",
@@ -18141,7 +18141,7 @@
       "coverUrl": "/vinilos/covers/158.jpg",
       "thumbUrl": "/vinilos/covers/158.jpg",
       "discogsUrl": "https://www.discogs.com/master/1699494-Ryo-Fukui-My-Favorite-Tune",
-      "matchScore": 1.0,
+      "matchScore": 1,
       "discogsSearchFormats": [
         "Vinyl",
         "LP",
@@ -18339,7 +18339,7 @@
         "Tech House",
         "House"
       ],
-      "matchScore": 1.0,
+      "matchScore": 1,
       "discogsReleaseUrl": "https://www.discogs.com/release/5134641-Booka-Shade-Eve",
       "discogsMasterId": "623518",
       "discogsMasterUrl": "https://www.discogs.com/master/623518-Booka-Shade-Eve"
@@ -18556,7 +18556,7 @@
         "Conscious",
         "Jazzy Hip-Hop"
       ],
-      "matchScore": 1.0,
+      "matchScore": 1,
       "discogsReleaseUrl": "https://www.discogs.com/release/20593054-Mac-Miller-Faces",
       "discogsMasterId": "1440599",
       "discogsMasterUrl": "https://www.discogs.com/master/1440599-Mac-Miller-Faces"
@@ -18587,7 +18587,7 @@
       "coverUrl": "/vinilos/covers/161.jpg",
       "thumbUrl": "/vinilos/covers/161.jpg",
       "discogsUrl": "https://www.discogs.com/master/9508-Laurent-Garnier-Unreasonable-Behaviour",
-      "matchScore": 1.0,
+      "matchScore": 1,
       "discogsSearchFormats": [
         "CD",
         "Album",
@@ -18713,7 +18713,7 @@
       "coverUrl": "/vinilos/covers/162.jpg",
       "thumbUrl": "/vinilos/covers/162.jpg",
       "discogsUrl": "https://www.discogs.com/master/179898-Sir-Joe-Quarterman-Free-Soul-Sir-Joe-Quarterman-Free-Soul",
-      "matchScore": 1.0,
+      "matchScore": 1,
       "discogsSearchFormats": [
         "Vinyl",
         "LP",
@@ -18821,7 +18821,7 @@
       "coverUrl": "/vinilos/covers/163.jpg",
       "thumbUrl": "/vinilos/covers/163.jpg",
       "discogsUrl": "https://www.discogs.com/master/620726-Nils-Frahm-Spaces",
-      "matchScore": 1.0,
+      "matchScore": 1,
       "discogsSearchFormats": [
         "Vinyl",
         "LP",
@@ -19692,7 +19692,7 @@
       "coverUrl": "/vinilos/covers/171.jpg",
       "thumbUrl": "/vinilos/covers/171.jpg",
       "discogsUrl": "https://www.discogs.com/master/521767-Mkwaju-Ensemble-Mkwaju",
-      "matchScore": 1.0,
+      "matchScore": 1,
       "discogsSearchFormats": [
         "Vinyl",
         "LP",
@@ -21166,7 +21166,7 @@
       "coverUrl": "/vinilos/covers/184.jpg",
       "thumbUrl": "/vinilos/covers/184.jpg",
       "discogsUrl": "https://www.discogs.com/master/1005579-Mixmaster-Morris-Jonah-Sharp-Quiet-Logic",
-      "matchScore": 1.0,
+      "matchScore": 1,
       "discogsSearchFormats": [
         "Vinyl",
         "LP",
@@ -21940,7 +21940,7 @@
       "coverUrl": "/vinilos/covers/192.jpg",
       "thumbUrl": "/vinilos/covers/192.jpg",
       "discogsUrl": "https://www.discogs.com/master/4106269-Alva-Noto-Ryuichi-Sakamoto-VIRUS",
-      "matchScore": 1.0,
+      "matchScore": 1,
       "discogsSearchFormats": [
         "Vinyl",
         "LP",
@@ -22281,6 +22281,92 @@
       "discogsReleaseUrl": "https://www.discogs.com/release/32202378-Alva-Noto-Ryuichi-Sakamoto-VIRUS",
       "discogsMasterId": "4106269",
       "discogsMasterUrl": "https://www.discogs.com/master/4106269-Alva-Noto-Ryuichi-Sakamoto-VIRUS"
+    },
+    {
+      "number": "193",
+      "artist": "Casiopea",
+      "title": "Mint Jams",
+      "year": "2025",
+      "genre": "Jazz",
+      "label": "Alfa",
+      "catalogNumber": "MHJL 449",
+      "country": "Japan",
+      "coverCondition": "NM",
+      "discCondition": "NM",
+      "id": "193-casiopea-mint-jams",
+      "genreGroups": [
+        "Jazz"
+      ],
+      "yearSort": 2025,
+      "searchText": "casiopea mint jams 2025 jazz alfa mhjl 449 japan ",
+      "coverUrl": "/vinilos/covers/193.jpg",
+      "thumbUrl": "/vinilos/covers/193.jpg",
+      "discogsUrl": "https://www.discogs.com/release/35175349-Casiopea-Mint-Jams",
+      "discogsCanonicalUrl": "https://www.discogs.com/release/35175349-Casiopea-Mint-Jams",
+      "discogsFormats": [
+        "Vinyl",
+        "LP",
+        "Album",
+        "Reissue",
+        "Remastered",
+        "Repress",
+        "Stereo"
+      ],
+      "discogsMediaType": "Vinyl",
+      "discogsIsVinyl": true,
+      "discogsGenres": [
+        "Jazz"
+      ],
+      "discogsStyles": [
+        "Fusion"
+      ],
+      "discogsReleaseId": "35175349",
+      "tracklist": [
+        {
+          "position": "A1",
+          "title": "Take Me",
+          "duration": "4:49",
+          "heading": ""
+        },
+        {
+          "position": "A2",
+          "title": "Asayake",
+          "duration": "4:58",
+          "heading": ""
+        },
+        {
+          "position": "A3",
+          "title": "Midnight Rendezvous",
+          "duration": "4:57",
+          "heading": ""
+        },
+        {
+          "position": "A4",
+          "title": "Time Limit",
+          "duration": "2:37",
+          "heading": ""
+        },
+        {
+          "position": "B1",
+          "title": "Domino Line",
+          "duration": "7:20",
+          "heading": ""
+        },
+        {
+          "position": "B2",
+          "title": "Tears Of The Star",
+          "duration": "4:28",
+          "heading": ""
+        },
+        {
+          "position": "B3",
+          "title": "Swear",
+          "duration": "6:47",
+          "heading": ""
+        }
+      ],
+      "addedVia": "barcode-scan",
+      "barcode": "4547366752038"
     }
   ],
   "gradingGuide": [
