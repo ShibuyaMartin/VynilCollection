@@ -5,6 +5,10 @@
       "destination": "/"
     },
     {
+      "source": "/vinilos/",
+      "destination": "/"
+    },
+    {
       "source": "/vinilos/:path*",
       "destination": "/:path*"
     }
