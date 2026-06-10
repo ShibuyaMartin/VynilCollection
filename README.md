@@ -59,3 +59,30 @@ python3 ./scripts/materialize_covers.py ./data/collection.json
 ## Deploy
 
 This repo is ready to deploy as a static site on Vercel. The important part is that `covers/` is versioned, so the deploy does not depend on Discogs or other remote image hosts at runtime.
+
+## Add records by scanning a barcode (mobile)
+
+Open `/add` (or `/vinilos/add`) on your phone, scan the barcode with the camera, pick the right Discogs edition, confirm, done. The flow is:
+
+1. `add.html` + `add.js` scan the barcode (native `BarcodeDetector` on Android/Chrome, `zxing-wasm` fallback on iOS Safari).
+2. `api/lookup.js` searches Discogs by barcode (or free text) and fetches release details — the Discogs token never reaches the browser.
+3. `api/add.js` builds a record with the same schema as `build_collection.py`, downloads the cover, and pushes **one atomic commit** to GitHub (`data/collection.json` + `covers/<n>.jpg`) via the Git Data API.
+4. Vercel picks up the commit and redeploys; the record shows up in about a minute.
+
+### Required Vercel environment variables
+
+| Variable | What it is |
+| --- | --- |
+| `DISCOGS_TOKEN` | Discogs personal access token (discogs.com → Settings → Developers) |
+| `GITHUB_TOKEN` | Fine-grained PAT with **Contents: Read and write** on this repo only |
+| `GITHUB_REPO` | `ShibuyaMartin/VynilCollection` |
+| `GITHUB_BRANCH` | Optional, defaults to `main` |
+| `ADMIN_TOKEN` | Any long random string; the scan page asks for it once and stores it in `localStorage` |
+
+Set them with `vercel env add <NAME> production` or in the Vercel dashboard, then redeploy. Generate a good `ADMIN_TOKEN` with `openssl rand -hex 24`.
+
+Notes:
+
+- Anyone can *view* the collection and even open `/add`, but only requests carrying `ADMIN_TOKEN` can write.
+- If a scan matches a release that is already in the collection (same Discogs release id), the API answers `409` instead of duplicating it.
+- After someone adds a record from the phone, run `git pull` before working locally.

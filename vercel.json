@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/add",
+      "destination": "/add.html"
+    },
+    {
+      "source": "/vinilos/add",
+      "destination": "/add.html"
+    },
+    {
       "source": "/vinilos",
       "destination": "/"
     },

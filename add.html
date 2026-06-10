@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Agregar vinilo — Vinilos Shibu</title>
+    <meta name="description" content="Escaneá el código de barras de un vinilo y agregalo a la colección.">
+    <meta name="theme-color" content="#101014">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
+    >
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #101014;
+        --panel: #1a1a20;
+        --panel-2: #232330;
+        --line: rgba(255, 255, 255, 0.1);
+        --text: #f4f4f5;
+        --muted: rgba(244, 244, 245, 0.55);
+        --accent: #7c9cff;
+        --danger: #ff7c7c;
+        --ok: #7cffb2;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Geist", system-ui, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .wrap {
+        width: min(560px, 100%);
+        padding: 16px 16px 48px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      header h1 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      header a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 13px;
+      }
+
+      .step { display: none; flex-direction: column; gap: 14px; }
+      .step.active { display: flex; }
+
+      .scanner-shell {
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #000;
+        aspect-ratio: 3 / 4;
+        max-height: 56dvh;
+      }
+
+      .scanner-shell video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .scan-frame {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+
+      .scan-frame::before {
+        content: "";
+        width: 78%;
+        height: 30%;
+        border: 2px solid rgba(255, 255, 255, 0.85);
+        border-radius: 12px;
+        box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.35);
+      }
+
+      .scan-status {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 12px;
+        text-align: center;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.85);
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+      }
+
+      .field-row { display: flex; gap: 8px; }
+
+      input[type="text"], input[type="search"], select, textarea {
+        width: 100%;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        color: var(--text);
+        font: inherit;
+        font-size: 16px;
+        padding: 12px 14px;
+      }
+
+      button {
+        font: inherit;
+        font-size: 15px;
+        font-weight: 600;
+        border: none;
+        border-radius: 10px;
+        padding: 13px 18px;
+        cursor: pointer;
+        background: var(--panel-2);
+        color: var(--text);
+      }
+
+      button.primary { background: var(--accent); color: #0b0b10; }
+      button.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); }
+      button:disabled { opacity: 0.5; cursor: default; }
+
+      .hint { color: var(--muted); font-size: 13px; margin: 0; }
+      .error { color: var(--danger); font-size: 14px; margin: 0; min-height: 1em; }
+
+      .candidate-list { display: flex; flex-direction: column; gap: 10px; }
+
+      .candidate {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 10px;
+        text-align: left;
+        font-weight: 400;
+      }
+
+      .candidate img {
+        width: 64px;
+        height: 64px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: var(--panel-2);
+        flex: none;
+      }
+
+      .candidate .meta { min-width: 0; }
+      .candidate .meta strong { display: block; font-size: 14px; line-height: 1.3; }
+      .candidate .meta span { display: block; color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+
+      .confirm-card {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
+      }
+
+      .confirm-card img {
+        width: 100%;
+        max-width: 280px;
+        border-radius: 12px;
+        align-self: center;
+      }
+
+      .confirm-card h2 { margin: 0; font-size: 17px; }
+      .confirm-card .sub { color: var(--muted); font-size: 13.5px; margin: 0; }
+
+      .condition-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .condition-grid label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+
+      .tracklist-preview {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        font-size: 13px;
+        max-height: 130px;
+        overflow: auto;
+      }
+
+      .success-card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .success-card .badge { font-size: 40px; }
+      .success-card h2 { margin: 0; font-size: 18px; }
+      .success-card p { margin: 0; color: var(--muted); font-size: 14px; }
+      .success-card a { color: var(--accent); }
+
+      .spinner {
+        width: 22px;
+        height: 22px;
+        border: 3px solid var(--line);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Agregar vinilo</h1>
+        <a id="back-link" href="./">← Colección</a>
+      </header>
+
+      <!-- Paso 1: escanear -->
+      <section class="step active" id="step-scan">
+        <div class="scanner-shell" id="scanner-shell" hidden>
+          <video id="scanner-video" playsinline muted></video>
+          <div class="scan-frame"></div>
+          <p class="scan-status" id="scan-status">Apuntá al código de barras</p>
+        </div>
+
+        <button class="primary" id="start-scan" type="button">📷 Escanear código de barras</button>
+        <button class="ghost" id="stop-scan" type="button" hidden>Detener cámara</button>
+
+        <p class="hint">¿Sin código o no lo toma? Escribilo a mano o buscá por artista/título:</p>
+        <form class="field-row" id="manual-form">
+          <input
+            id="manual-input"
+            name="query"
+            type="search"
+            placeholder="Código de barras o 'artista título'"
+            autocomplete="off"
+          >
+          <button type="submit">Buscar</button>
+        </form>
+        <p class="error" id="scan-error"></p>
+      </section>
+
+      <!-- Paso 2: candidatos -->
+      <section class="step" id="step-candidates">
+        <p class="hint" id="candidates-heading"></p>
+        <div class="candidate-list" id="candidate-list"></div>
+        <button class="ghost" id="candidates-back" type="button">← Volver a escanear</button>
+      </section>
+
+      <!-- Paso 3: confirmar -->
+      <section class="step" id="step-confirm">
+        <div class="confirm-card" id="confirm-card"></div>
+        <div class="condition-grid">
+          <label>
+            Estado tapa
+            <select id="cover-condition">
+              <option>M</option><option>NM</option><option>EX</option>
+              <option selected>VG+</option><option>VG</option><option>G</option>
+            </select>
+          </label>
+          <label>
+            Estado disco
+            <select id="disc-condition">
+              <option>M</option><option>NM</option><option>EX</option>
+              <option selected>VG+</option><option>VG</option><option>G</option>
+            </select>
+          </label>
+        </div>
+        <input id="comment-input" name="comment" type="text" placeholder="Comentario (opcional)" autocomplete="off">
+        <button class="primary" id="confirm-add" type="button">Agregar a la colección</button>
+        <button class="ghost" id="confirm-back" type="button">← Elegir otro</button>
+        <p class="error" id="confirm-error"></p>
+      </section>
+
+      <!-- Paso 4: listo -->
+      <section class="step" id="step-done">
+        <div class="success-card" id="success-card"></div>
+        <button class="primary" id="scan-another" type="button">Escanear otro</button>
+      </section>
+    </div>
+
+    <script type="module" src="./add.js"></script>
+  </body>
+</html>
