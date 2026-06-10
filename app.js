@@ -949,47 +949,18 @@ function getStylesForRecord(record) {
   return (record.discogsStyles ?? []).filter(Boolean);
 }
 
+// Owning multiple copies of the same release is normal for a collection, so
+// only collapse true double-entries (same collection number twice).
 function dedupeRecords(records) {
   const map = new Map();
 
   records.forEach((record) => {
-    const releaseId = String(record.discogsReleaseId || "").trim();
-    const fallbackKey = [
-      normalizeText(record.artist || ""),
-      normalizeText(record.title || ""),
-      normalizeText(record.year || ""),
-      normalizeText(record.label || ""),
-    ].join("|");
-    const key = releaseId ? `release:${releaseId}` : `fallback:${fallbackKey}`;
-
-    if (!map.has(key)) {
-      map.set(key, record);
-      return;
-    }
-
-    const existing = map.get(key);
-    const existingScore = qualityScore(existing);
-    const nextScore = qualityScore(record);
-    if (nextScore > existingScore) {
-      map.set(key, record);
+    if (!map.has(record.number)) {
+      map.set(record.number, record);
     }
   });
 
   return [...map.values()].sort((left, right) => Number(left.number) - Number(right.number));
-}
-
-function qualityScore(record) {
-  let score = 0;
-  if (record.coverUrl) {
-    score += 2;
-  }
-  if (record.tracklist?.length) {
-    score += 2;
-  }
-  if (record.discogsStyles?.length) {
-    score += 1;
-  }
-  return score;
 }
 
 let currentPlayerQuery = null;
