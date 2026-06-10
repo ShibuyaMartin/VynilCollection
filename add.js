@@ -26,10 +26,6 @@ const confirmError = document.getElementById("confirm-error");
 const confirmAddButton = document.getElementById("confirm-add");
 const adminTokenRow = document.getElementById("admin-token-row");
 const adminTokenInput = document.getElementById("admin-token-input");
-const identifyButton = document.getElementById("identify-cover");
-const coverPhotoInput = document.getElementById("cover-photo-input");
-const scanTokenRow = document.getElementById("scan-token-row");
-const scanTokenInput = document.getElementById("scan-token-input");
 
 document.getElementById("back-link").href = APP_BASE_PATH || "/";
 
@@ -44,21 +40,6 @@ manualForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const query = manualInput.value.trim();
   if (query) search(query);
-});
-identifyButton.addEventListener("click", () => {
-  scanError.textContent = "";
-  if (!identifyToken()) {
-    scanTokenRow.hidden = false;
-    scanError.textContent = "Paste the admin token to identify covers.";
-    scanTokenInput.focus();
-    return;
-  }
-  coverPhotoInput.click();
-});
-coverPhotoInput.addEventListener("change", () => {
-  const file = coverPhotoInput.files && coverPhotoInput.files[0];
-  coverPhotoInput.value = "";
-  if (file) identifyCover(file);
 });
 document.getElementById("candidates-back").addEventListener("click", () => showStep("scan"));
 document.getElementById("confirm-back").addEventListener("click", () => showStep("candidates"));
@@ -170,80 +151,6 @@ async function createDetector() {
     const results = await readBarcodes(imageData, { formats: ZXING_FORMATS, tryHarder: true });
     return results[0]?.text || null;
   };
-}
-
-// --- Cover identification (photo -> Claude vision -> Discogs search) -------
-
-function identifyToken() {
-  return localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY) || scanTokenInput.value.trim();
-}
-
-async function identifyCover(file) {
-  stopScanner();
-  const token = identifyToken();
-  candidatesHeading.textContent = "Identifying cover…";
-  candidateList.innerHTML = '<div class="spinner"></div>';
-  showStep("candidates");
-
-  try {
-    const image = await downscaleToJpegBase64(file, 1024);
-    const response = await fetch(apiUrl("/api/identify"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ image }),
-    });
-
-    let data = null;
-    try {
-      data = await response.json();
-    } catch {
-      throw new Error(`The server responded ${response.status}. Is the API deployed?`);
-    }
-    if (response.status === 401) {
-      localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
-      scanTokenRow.hidden = false;
-      scanTokenInput.value = "";
-      throw new Error("Invalid token. Paste it again and retry.");
-    }
-    if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
-
-    localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, token);
-    scanTokenRow.hidden = true;
-
-    const identification = data.identification || {};
-    const query = [identification.artist, identification.title].filter(Boolean).join(" ").trim();
-    if (!query || identification.confidence === "low") {
-      throw new Error("Could not read that cover. Try a straighter photo, the barcode, or a manual search.");
-    }
-    search(query);
-  } catch (error) {
-    showStep("scan");
-    scanError.textContent = error.message;
-  }
-}
-
-function downscaleToJpegBase64(file, maxSize) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL("image/jpeg", 0.85).split(",")[1]);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Could not read the photo."));
-    };
-    img.src = url;
-  });
 }
 
 // --- Paso 2: candidatos ----------------------------------------------------
