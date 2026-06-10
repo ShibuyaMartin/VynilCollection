@@ -304,6 +304,10 @@
           </label>
         </div>
         <input id="comment-input" name="comment" type="text" placeholder="Comentario (opcional)" autocomplete="off">
+        <div id="admin-token-row" hidden>
+          <input id="admin-token-input" name="admin-token" type="password" placeholder="Token de admin" autocomplete="off">
+          <p class="hint">Solo la primera vez: pegá el token de admin (queda guardado en este teléfono).</p>
+        </div>
         <button class="primary" id="confirm-add" type="button">Agregar a la colección</button>
         <button class="ghost" id="confirm-back" type="button">← Elegir otro</button>
         <p class="error" id="confirm-error"></p>

@@ -24,6 +24,8 @@ const candidateList = document.getElementById("candidate-list");
 const confirmCard = document.getElementById("confirm-card");
 const confirmError = document.getElementById("confirm-error");
 const confirmAddButton = document.getElementById("confirm-add");
+const adminTokenRow = document.getElementById("admin-token-row");
+const adminTokenInput = document.getElementById("admin-token-input");
 
 document.getElementById("back-link").href = APP_BASE_PATH || "/";
 
@@ -230,6 +232,7 @@ function renderRetry(message) {
 async function loadRelease(releaseId) {
   confirmError.textContent = "";
   confirmCard.innerHTML = '<div class="spinner"></div>';
+  adminTokenRow.hidden = Boolean(localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY));
   showStep("confirm");
 
   try {
@@ -287,9 +290,12 @@ async function addSelectedRelease() {
   if (!selectedRelease) return;
   confirmError.textContent = "";
 
-  const adminToken = getAdminToken();
+  const storedToken = localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY) || "";
+  const adminToken = storedToken || adminTokenInput.value.trim();
   if (!adminToken) {
-    confirmError.textContent = "Necesitás el token de admin para agregar discos.";
+    adminTokenRow.hidden = false;
+    confirmError.textContent = "Pegá el token de admin para poder agregar discos.";
+    adminTokenInput.focus();
     return;
   }
 
@@ -315,13 +321,17 @@ async function addSelectedRelease() {
 
     if (response.status === 401) {
       localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
-      throw new Error("Token inválido. Tocá 'Agregar' de nuevo e ingresalo otra vez.");
+      adminTokenRow.hidden = false;
+      adminTokenInput.value = "";
+      throw new Error("Token inválido. Pegalo de nuevo y reintentá.");
     }
     if (response.status === 409 && data.error === "duplicate") {
       throw new Error(data.message);
     }
     if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
 
+    localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, adminToken);
+    adminTokenInput.value = "";
     renderSuccess(data);
     showStep("done");
   } catch (error) {
@@ -354,15 +364,6 @@ function renderSuccess(data) {
 }
 
 // --- Helpers ----------------------------------------------------------------
-
-function getAdminToken() {
-  let token = localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY) || "";
-  if (!token) {
-    token = (window.prompt("Token de admin (solo la primera vez):") || "").trim();
-    if (token) localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, token);
-  }
-  return token;
-}
 
 function resolveAppBasePath() {
   const path = window.location.pathname || "/";
