@@ -1,7 +1,7 @@
 {
   "collectionName": "🎵 Colección de Vinilos — Martín Shibuya",
-  "generatedAt": "2026-06-11T00:38:05.816Z",
-  "recordCount": 192,
+  "generatedAt": "2026-06-11T22:50:10.763Z",
+  "recordCount": 193,
   "records": [
     {
       "number": "1",
@@ -22436,6 +22436,101 @@
           "position": "B4",
           "title": "Live Your Life Away",
           "duration": "3:40",
+          "heading": ""
+        }
+      ],
+      "addedVia": "barcode-scan"
+    },
+    {
+      "number": "196",
+      "artist": "Motörhead",
+      "title": "Rock 'N' Roll",
+      "year": "1987",
+      "genre": "Rock",
+      "label": "GWR Records",
+      "catalogNumber": "GWLP 14",
+      "country": "UK",
+      "coverCondition": "NM",
+      "discCondition": "NM",
+      "id": "196-motorhead-rock-n-roll",
+      "genreGroups": [
+        "Rock"
+      ],
+      "yearSort": 1987,
+      "searchText": "motorhead rock 'n' roll 1987 rock gwr records gwlp 14 uk ",
+      "coverUrl": "/vinilos/covers/196.jpg",
+      "thumbUrl": "/vinilos/covers/196.jpg",
+      "discogsUrl": "https://www.discogs.com/release/815737-Motörhead-Rock-N-Roll",
+      "discogsCanonicalUrl": "https://www.discogs.com/release/815737-Motörhead-Rock-N-Roll",
+      "discogsFormats": [
+        "Vinyl",
+        "LP",
+        "Album",
+        "Stereo"
+      ],
+      "discogsMediaType": "Vinyl",
+      "discogsIsVinyl": true,
+      "discogsGenres": [
+        "Rock"
+      ],
+      "discogsStyles": [
+        "Rock & Roll",
+        "Heavy Metal"
+      ],
+      "discogsReleaseId": "815737",
+      "tracklist": [
+        {
+          "position": "A1",
+          "title": "Rock 'N' Roll",
+          "duration": "3:48",
+          "heading": ""
+        },
+        {
+          "position": "A2",
+          "title": "Eat The Rich",
+          "duration": "3:40",
+          "heading": ""
+        },
+        {
+          "position": "A3",
+          "title": "Blackheart",
+          "duration": "4:00",
+          "heading": ""
+        },
+        {
+          "position": "A4",
+          "title": "Stone Deaf In The USA",
+          "duration": "3:34",
+          "heading": ""
+        },
+        {
+          "position": "B1",
+          "title": "The Wolf",
+          "duration": "3:25",
+          "heading": ""
+        },
+        {
+          "position": "B2",
+          "title": "Traitor",
+          "duration": "3:18",
+          "heading": ""
+        },
+        {
+          "position": "B3",
+          "title": "Dogs",
+          "duration": "3:46",
+          "heading": ""
+        },
+        {
+          "position": "B4",
+          "title": "All For You",
+          "duration": "4:08",
+          "heading": ""
+        },
+        {
+          "position": "B5",
+          "title": "Boogeyman",
+          "duration": "3:15",
           "heading": ""
         }
       ],
