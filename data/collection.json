@@ -1,7 +1,7 @@
 {
   "collectionName": "🎵 Colección de Vinilos — Martín Shibuya",
-  "generatedAt": "2026-06-11T22:50:10.763Z",
-  "recordCount": 193,
+  "generatedAt": "2026-06-11T22:51:44.469Z",
+  "recordCount": 194,
   "records": [
     {
       "number": "1",
@@ -22531,6 +22531,102 @@
           "position": "B5",
           "title": "Boogeyman",
           "duration": "3:15",
+          "heading": ""
+        }
+      ],
+      "addedVia": "barcode-scan"
+    },
+    {
+      "number": "197",
+      "artist": "Pescado Rabioso",
+      "title": "Artaud",
+      "year": "2015",
+      "genre": "Rock",
+      "label": "Talent (4)",
+      "catalogNumber": "SE-408",
+      "country": "Argentina",
+      "coverCondition": "NM",
+      "discCondition": "NM",
+      "id": "197-pescado-rabioso-artaud",
+      "genreGroups": [
+        "Rock"
+      ],
+      "yearSort": 2015,
+      "searchText": "pescado rabioso artaud 2015 rock talent (4) se-408 argentina ",
+      "coverUrl": "/vinilos/covers/197.jpg",
+      "thumbUrl": "/vinilos/covers/197.jpg",
+      "discogsUrl": "https://www.discogs.com/release/7039135-Pescado-Rabioso-Artaud",
+      "discogsCanonicalUrl": "https://www.discogs.com/release/7039135-Pescado-Rabioso-Artaud",
+      "discogsFormats": [
+        "Vinyl",
+        "LP",
+        "Album",
+        "Reissue"
+      ],
+      "discogsMediaType": "Vinyl",
+      "discogsIsVinyl": true,
+      "discogsGenres": [
+        "Rock"
+      ],
+      "discogsStyles": [
+        "Folk Rock",
+        "Acoustic",
+        "Prog Rock"
+      ],
+      "discogsReleaseId": "7039135",
+      "tracklist": [
+        {
+          "position": "A1",
+          "title": "Todas Las Hojas Son Del Viento",
+          "duration": "2:17",
+          "heading": ""
+        },
+        {
+          "position": "A2",
+          "title": "Cementerio Club",
+          "duration": "5:02",
+          "heading": ""
+        },
+        {
+          "position": "A3",
+          "title": "Por",
+          "duration": "1:44",
+          "heading": ""
+        },
+        {
+          "position": "A4",
+          "title": "Superchería",
+          "duration": "4:26",
+          "heading": ""
+        },
+        {
+          "position": "A5",
+          "title": "Las Sed Verdadera",
+          "duration": "3:38",
+          "heading": ""
+        },
+        {
+          "position": "B1",
+          "title": "Cantata De Puentes Amarillos",
+          "duration": "9:18",
+          "heading": ""
+        },
+        {
+          "position": "B2",
+          "title": "Bajan",
+          "duration": "3:35",
+          "heading": ""
+        },
+        {
+          "position": "B3",
+          "title": "A Starosta, El Idiota",
+          "duration": "3:21",
+          "heading": ""
+        },
+        {
+          "position": "B4",
+          "title": "Las Habladurías Del Mundo",
+          "duration": "4:08",
           "heading": ""
         }
       ],
