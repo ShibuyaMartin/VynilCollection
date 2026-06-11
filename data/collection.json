@@ -1,7 +1,7 @@
 {
   "collectionName": "🎵 Colección de Vinilos — Martín Shibuya",
-  "generatedAt": "2026-06-10T22:20:59.120Z",
-  "recordCount": 192,
+  "generatedAt": "2026-06-11T00:38:05.816Z",
+  "recordCount": 193,
   "records": [
     {
       "number": "1",
@@ -22465,6 +22465,95 @@
           "position": "B4",
           "title": "アプロディーテの嘆き",
           "duration": "3:52",
+          "heading": ""
+        }
+      ],
+      "addedVia": "barcode-scan"
+    },
+    {
+      "number": "195",
+      "artist": "Ronnie Laws",
+      "title": "Flame",
+      "year": "1978",
+      "genre": "Jazz / Funk / Soul",
+      "label": "United Artists Records",
+      "catalogNumber": "UA-LA881-H",
+      "country": "US",
+      "coverCondition": "VG+",
+      "discCondition": "VG+",
+      "id": "195-ronnie-laws-flame",
+      "genreGroups": [
+        "Jazz",
+        "Funk / Soul"
+      ],
+      "yearSort": 1978,
+      "searchText": "ronnie laws flame 1978 jazz / funk / soul united artists records ua-la881-h us ",
+      "coverUrl": "/vinilos/covers/195.jpg",
+      "thumbUrl": "/vinilos/covers/195.jpg",
+      "discogsUrl": "https://www.discogs.com/release/1183587-Ronnie-Laws-Flame",
+      "discogsCanonicalUrl": "https://www.discogs.com/release/1183587-Ronnie-Laws-Flame",
+      "discogsFormats": [
+        "Vinyl",
+        "LP",
+        "Album"
+      ],
+      "discogsMediaType": "Vinyl",
+      "discogsIsVinyl": true,
+      "discogsGenres": [
+        "Jazz",
+        "Funk / Soul"
+      ],
+      "discogsStyles": [
+        "Jazz-Funk"
+      ],
+      "discogsReleaseId": "1183587",
+      "tracklist": [
+        {
+          "position": "A1",
+          "title": "All For You",
+          "duration": "3:04",
+          "heading": ""
+        },
+        {
+          "position": "A2",
+          "title": "These Days",
+          "duration": "4:35",
+          "heading": ""
+        },
+        {
+          "position": "A3",
+          "title": "Flame",
+          "duration": "7:06",
+          "heading": ""
+        },
+        {
+          "position": "A4",
+          "title": "Living Love",
+          "duration": "4:12",
+          "heading": ""
+        },
+        {
+          "position": "B1",
+          "title": "Love Is Here",
+          "duration": "4:53",
+          "heading": ""
+        },
+        {
+          "position": "B2",
+          "title": "Grace",
+          "duration": "6:02",
+          "heading": ""
+        },
+        {
+          "position": "B3",
+          "title": "Joy",
+          "duration": "5:34",
+          "heading": ""
+        },
+        {
+          "position": "B4",
+          "title": "Live Your Life Away",
+          "duration": "3:40",
           "heading": ""
         }
       ],
