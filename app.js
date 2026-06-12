@@ -1,4 +1,5 @@
 import { supabase, coverPublicUrl } from "/js/supabase-client.js";
+import { initSocial, renderSocial } from "/js/social.js";
 
 const VIEW_MODE_STORAGE_KEY = "vinilos-view-mode";
 
@@ -160,6 +161,8 @@ async function init() {
   syncViewMode();
   applyFilters({ autoResetIfEmpty: true });
   initTuningPanel();
+  await initSocial();
+  render();
 }
 
 // Maps a Supabase row to the legacy record shape the rest of the UI expects.
@@ -928,6 +931,7 @@ function renderAlbumPanel() {
 
   renderTracklist(record.tracklist ?? []);
   updatePlayer(record);
+  renderSocial(record, state.owner?.id);
 }
 
 function buildMetaLine(record) {

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Deadwax — Vinyl Collections</title>
+    <meta name="description" content="Deadwax — share your vinyl collection.">
+    <meta name="theme-color" content="#000000">
+    <meta property="og:title" content="Deadwax">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
+    >
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #000000;
+        --panel: rgba(255, 255, 255, 0.03);
+        --border: rgba(255, 255, 255, 0.08);
+        --border-strong: rgba(255, 255, 255, 0.2);
+        --text: #f3ede3;
+        --text-soft: rgba(243, 237, 227, 0.78);
+        --text-dim: rgba(243, 237, 227, 0.42);
+        --font-sans: "Geist", system-ui, sans-serif;
+        --font-mono: "Geist Mono", monospace;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-sans);
+      }
+
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 26px 22px 64px;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 40px;
+      }
+
+      .logo img { height: 18px; display: block; }
+
+      header nav a {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        text-decoration: none;
+        margin-left: 18px;
+      }
+
+      header nav a:hover { color: var(--text); }
+
+      .tagline {
+        font-size: clamp(1.4rem, 3.4vw, 2.1rem);
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin: 0 0 6px;
+      }
+
+      .sub {
+        color: var(--text-dim);
+        font-size: 0.9rem;
+        margin: 0 0 40px;
+      }
+
+      .collections {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+      }
+
+      .collection-card {
+        display: block;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        padding: 16px;
+        text-decoration: none;
+        color: inherit;
+        transition: border-color 0.15s ease;
+      }
+
+      .collection-card:hover { border-color: var(--border-strong); }
+
+      .collection-card__covers {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+
+      .collection-card__covers img,
+      .collection-card__covers .ph {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        background: rgba(255, 255, 255, 0.05);
+        display: block;
+      }
+
+      .collection-card h2 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+
+      .collection-card .meta {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        margin: 6px 0 0;
+      }
+
+      .collection-card .bio {
+        color: var(--text-soft);
+        font-size: 0.8125rem;
+        margin: 8px 0 0;
+        line-height: 1.5;
+      }
+
+      .status {
+        color: var(--text-dim);
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <a class="logo" href="/"><img src="/deadwax.svg" alt="Deadwax"></a>
+        <nav>
+          <a href="/add">Add records</a>
+          <a href="/login" id="auth-link">Sign in</a>
+        </nav>
+      </header>
+
+      <h1 class="tagline">Vinyl collections, side by side.</h1>
+      <p class="sub">Scan your records, build your shelf, see what your friends are spinning.</p>
+
+      <div class="collections" id="collections">
+        <p class="status">Loading collections…</p>
+      </div>
+    </div>
+
+    <script type="module" src="/js/explore.js?v=1"></script>
+  </body>
+</html>

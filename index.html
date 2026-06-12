@@ -14,8 +14,8 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
     >
-    <link rel="stylesheet" href="/styles.css?v=1781180000">
-    <script type="module" src="/app.js?v=1781180000"></script>
+    <link rel="stylesheet" href="/styles.css?v=1781210000">
+    <script type="module" src="/app.js?v=1781210000"></script>
     <meta property="og:title" content="Deadwax">
   </head>
   <body>
@@ -103,6 +103,22 @@
               </a>
             </div>
 
+            <div class="social-strip" id="social-strip" hidden>
+              <button class="social-like" id="like-button" type="button" aria-label="Like">
+                &hearts; <span id="like-count">0</span>
+              </button>
+              <button class="social-ping" id="ping-button" type="button" hidden>Is this for sale?</button>
+            </div>
+
+            <div class="ping-form" id="ping-form" hidden>
+              <textarea id="ping-message" maxlength="500" rows="2" placeholder="Optional message for the owner"></textarea>
+              <label class="ping-share">
+                <input type="checkbox" id="ping-share-email"> Share my email so they can reply directly
+              </label>
+              <button class="ping-send" id="ping-send" type="button">Send</button>
+              <p class="social-note" id="ping-status"></p>
+            </div>
+
           </div>
 
           <div class="tracklist-panel">
@@ -112,6 +128,19 @@
             </div>
 
             <ol class="tracklist-list" id="tracklist-list"></ol>
+          </div>
+
+          <div class="comments-panel" id="comments-panel" hidden>
+            <div class="section-heading">
+              <h2>Comments</h2>
+              <p class="tracklist-panel__status" id="comments-status"></p>
+            </div>
+            <ol class="comments-list" id="comments-list"></ol>
+            <form class="comment-form" id="comment-form" hidden>
+              <input id="comment-input" name="comment" maxlength="1000" placeholder="Add a comment..." autocomplete="off">
+              <button type="submit">Post</button>
+            </form>
+            <p class="social-note" id="comments-signin" hidden><a href="/login">Sign in</a> to comment.</p>
           </div>
 
           <div class="player-shell" id="player-shell" hidden>
