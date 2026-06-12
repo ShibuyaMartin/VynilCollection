@@ -877,17 +877,41 @@ body::before {
 /* OVERRIDES */
 .control-strip { position:fixed!important;top:0;right:0;z-index:200;background:none!important;border:none!important;padding:12px!important;display:flex!important;align-items:center;justify-content:flex-end;gap:10px!important;width:auto!important;grid-template-columns:unset!important; }
 
-/* Etched in the run-out groove, like on the record it comes from. */
+/* Etched in the run-out groove, like on the record it comes from. The
+   faint base text carries a shine that sweeps across it — driven by the
+   gyroscope on phones and the mouse on desktop, like tilting the vinyl
+   against the light. */
 .deadwax-etching {
   text-align: center;
   font-family: var(--font-mono);
   font-size: 0.625rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--text);
-  opacity: 0.09;
   margin: 0;
   padding: 3.5rem 1rem 1.75rem;
+  color: rgba(243, 237, 227, 0.09);
+  background-image: linear-gradient(
+    100deg,
+    rgba(243, 237, 227, 0) 42%,
+    rgba(243, 237, 227, 0.95) 50%,
+    rgba(243, 237, 227, 0) 58%
+  );
+  background-repeat: no-repeat;
+  background-size: 34% 100%;
+  background-position-y: 0;
+  background-position-x: var(--shine, -60%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  transition: background-position-x 0.3s ease-out;
+}
+
+@keyframes deadwax-sweep {
+  from { background-position-x: -60%; }
+  to { background-position-x: 160%; }
+}
+
+.deadwax-etching--sweep {
+  animation: deadwax-sweep 2.8s ease-in-out;
 }
 
 .deadwax-etching::selection {

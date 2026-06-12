@@ -1485,3 +1485,56 @@ window.addEventListener(
   },
   { passive: true }
 );
+
+// The deadwax etching: a shine sweeps the run-out line. Phones drive it
+// with the gyroscope, desktop with the mouse, and the first time it
+// scrolls into view it does one smooth reveal pass on its own.
+const etching = document.querySelector(".deadwax-etching");
+if (etching) {
+  const setShine = (ratio) => {
+    const pct = Math.max(-60, Math.min(160, ratio * 220 - 60));
+    etching.style.setProperty("--shine", `${pct}%`);
+  };
+
+  window.addEventListener(
+    "mousemove",
+    (event) => setShine(event.clientX / window.innerWidth),
+    { passive: true }
+  );
+
+  window.addEventListener(
+    "deviceorientation",
+    (event) => {
+      if (event.gamma == null) return;
+      const gamma = Math.max(-40, Math.min(40, event.gamma));
+      setShine((gamma + 40) / 80);
+    },
+    true
+  );
+
+  // iOS only hands out gyroscope events after a permission prompt from a
+  // user gesture — tapping the etching unlocks it.
+  etching.addEventListener("click", () => {
+    if (typeof DeviceOrientationEvent !== "undefined" && DeviceOrientationEvent.requestPermission) {
+      DeviceOrientationEvent.requestPermission().catch(() => {});
+    }
+  });
+
+  // Armed on the first real scroll — at page load the layout is still
+  // short and the line would "enter the viewport" before anyone looks.
+  const sweepObserver = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        etching.classList.add("deadwax-etching--sweep");
+        etching.addEventListener(
+          "animationend",
+          () => etching.classList.remove("deadwax-etching--sweep"),
+          { once: true }
+        );
+        sweepObserver.disconnect();
+      }
+    },
+    { threshold: 0.5 }
+  );
+  window.addEventListener("scroll", () => sweepObserver.observe(etching), { once: true, passive: true });
+}
