@@ -43,6 +43,11 @@
       "destination": "/login.html"
     }
   ],
+  "functions": {
+    "api/import.js": {
+      "maxDuration": 60
+    }
+  },
   "crons": [
     {
       "path": "/api/keepalive",

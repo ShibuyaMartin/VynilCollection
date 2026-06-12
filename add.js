@@ -430,3 +430,82 @@ async function fetchJson(url) {
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+// --- Discogs collection import ------------------------------------------------
+// One /api/import call per Discogs page (25 releases); the loop here drives
+// progress until the server says done.
+
+const importForm = document.getElementById("import-form");
+const importUsernameInput = document.getElementById("import-username");
+const importError = document.getElementById("import-error");
+const importStatus = document.getElementById("import-status");
+
+importForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const discogsUsername = importUsernameInput.value.trim();
+  if (!discogsUsername) return;
+
+  const { data } = await supabase.auth.getSession();
+  const accessToken = data.session?.access_token;
+  if (!accessToken) {
+    window.location.replace("/login?next=/add");
+    return;
+  }
+
+  const submitButton = importForm.querySelector("button");
+  submitButton.disabled = true;
+  importUsernameInput.disabled = true;
+  importError.textContent = "";
+  importStatus.hidden = false;
+  importStatus.textContent = "Connecting to Discogs…";
+
+  let page = 1;
+  let imported = 0;
+  let skipped = 0;
+
+  try {
+    for (;;) {
+      const response = await fetch("/api/import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ discogsUsername, page }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || `The server responded ${response.status}`);
+      }
+
+      imported += payload.imported;
+      skipped += payload.skipped;
+      importStatus.textContent =
+        `Importing… ${imported} added · ${skipped} skipped — page ${payload.page}/${payload.pages}`;
+
+      if (payload.done) {
+        importStatus.textContent = payload.capped
+          ? `Imported ${imported}, skipped ${skipped} — stopped at the ${payload.collectionCount}-record limit.`
+          : `Done: ${imported} imported, ${skipped} already on your shelf.`;
+        if (imported) {
+          const profile = await getOwnProfile();
+          if (profile) {
+            importStatus.append(" ");
+            const link = document.createElement("a");
+            link.href = `/u/${profile.username}`;
+            link.textContent = "View your collection →";
+            importStatus.append(link);
+          }
+        }
+        break;
+      }
+      page = payload.page + 1;
+    }
+  } catch (error) {
+    importError.textContent = error.message || "Import failed";
+    importStatus.hidden = true;
+  } finally {
+    submitButton.disabled = false;
+    importUsernameInput.disabled = false;
+  }
+});

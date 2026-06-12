@@ -313,6 +313,17 @@
         letter-spacing: 0.04em;
       }
 
+      .import-box {
+        border-top: 1px solid var(--border);
+        margin-top: 10px;
+        padding-top: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .import-box a { color: var(--text); }
+
       .spinner {
         width: 18px;
         height: 18px;
@@ -359,6 +370,23 @@
           <button type="submit">Search</button>
         </form>
         <p class="error" id="scan-error"></p>
+
+        <div class="import-box">
+          <p class="hint">Already on Discogs? Import your whole collection in one go:</p>
+          <form class="field-row" id="import-form">
+            <input
+              id="import-username"
+              name="discogs-username"
+              type="text"
+              placeholder="Discogs username"
+              autocomplete="off"
+              autocapitalize="off"
+            >
+            <button type="submit">Import</button>
+          </form>
+          <p class="error" id="import-error"></p>
+          <p class="hint" id="import-status" hidden></p>
+        </div>
       </section>
 
       <!-- Step 2: candidates -->
@@ -400,6 +428,6 @@
       </section>
     </div>
 
-    <script type="module" src="./add.js?v=1781135000"></script>
+    <script type="module" src="./add.js?v=1781219000"></script>
   </body>
 </html>
