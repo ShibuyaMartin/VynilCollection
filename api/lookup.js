@@ -1,5 +1,5 @@
 const DISCOGS_API = "https://api.discogs.com";
-const USER_AGENT = "Deadwax/1.0 +https://deadwax.app";
+const USER_AGENT = "Deadwax/1.0";
 
 export default async function handler(req, res) {
   const token = process.env.DISCOGS_TOKEN;
