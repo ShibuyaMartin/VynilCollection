@@ -77,7 +77,7 @@ async function startScanner() {
   scanError.textContent = "";
   try {
     mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+      video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
       audio: false,
     });
   } catch {
@@ -88,6 +88,25 @@ async function startScanner() {
 
   video.srcObject = mediaStream;
   await video.play();
+
+  // Continuous autofocus and a modest zoom dramatically improve barcode
+  // reads on phones; both are best-effort (not all browsers expose them).
+  try {
+    const [track] = mediaStream.getVideoTracks();
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    const advanced = [];
+    if (Array.isArray(caps.focusMode) && caps.focusMode.includes("continuous")) {
+      advanced.push({ focusMode: "continuous" });
+    }
+    if (caps.zoom && caps.zoom.max >= 1.5) {
+      advanced.push({ zoom: Math.min(2, caps.zoom.max) });
+    }
+    if (advanced.length) {
+      await track.applyConstraints({ advanced });
+    }
+  } catch {
+    // Best effort only.
+  }
   scannerShell.hidden = false;
   startScanButton.hidden = true;
   stopScanButton.hidden = false;
@@ -115,7 +134,7 @@ async function startScanner() {
     } catch {
       // Frame failed to decode; keep trying.
     }
-    await sleep(220);
+    await sleep(150);
   }
 }
 
@@ -157,12 +176,26 @@ async function createDetector() {
   const context = canvas.getContext("2d", { willReadFrequently: true });
 
   return async (videoElement) => {
-    if (!videoElement.videoWidth) return null;
-    canvas.width = videoElement.videoWidth;
-    canvas.height = videoElement.videoHeight;
-    context.drawImage(videoElement, 0, 0);
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    const results = await readBarcodes(imageData, { formats: ZXING_FORMATS, tryHarder: true });
+    const width = videoElement.videoWidth;
+    const height = videoElement.videoHeight;
+    if (!width) return null;
+
+    // Decode only the on-screen guide region: the barcode covers far more
+    // effective pixels than in a full-frame scan.
+    const cropWidth = Math.round(width * 0.8);
+    const cropHeight = Math.round(height * 0.36);
+    const cropX = Math.round((width - cropWidth) / 2);
+    const cropY = Math.round((height - cropHeight) / 2);
+    canvas.width = cropWidth;
+    canvas.height = cropHeight;
+    context.drawImage(videoElement, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+    const imageData = context.getImageData(0, 0, cropWidth, cropHeight);
+    const results = await readBarcodes(imageData, {
+      formats: ZXING_FORMATS,
+      tryHarder: true,
+      tryRotate: true,
+      tryInvert: true,
+    });
     return results[0]?.text || null;
   };
 }
