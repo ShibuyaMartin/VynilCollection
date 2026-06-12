@@ -1,5 +1,5 @@
 const DISCOGS_API = "https://api.discogs.com";
-const USER_AGENT = "VinilosShibu/1.0 +https://vynil-collection.vercel.app";
+const USER_AGENT = "Deadwax/1.0 +https://deadwax.app";
 
 export default async function handler(req, res) {
   const token = process.env.DISCOGS_TOKEN;

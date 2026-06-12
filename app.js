@@ -152,7 +152,7 @@ async function init() {
 
   state.owner = owner;
   state.records = dedupeRecords((rows || []).map(rowToLegacyRecord));
-  document.title = `${owner.display_name || owner.username} — Vinilos`;
+  document.title = `${owner.display_name || owner.username} — Deadwax`;
 
   buildFilters();
   bindEvents();

@@ -3,7 +3,7 @@
 // uploads the cover to Storage. Replaces the old GitHub-commit flow.
 
 const DISCOGS_API = "https://api.discogs.com";
-const USER_AGENT = "VinilosShibu/1.0 +https://vynil-collection.vercel.app";
+const USER_AGENT = "Deadwax/1.0 +https://deadwax.app";
 const MAX_RECORDS_PER_COLLECTION = 500;
 const MAX_COVER_BYTES = 2 * 1024 * 1024;
 
