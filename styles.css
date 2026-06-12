@@ -985,7 +985,9 @@ html, body {
   inset: 0;
   z-index: 3;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  grid-template-columns: repeat(7, 1fr);
+  /* Scroll works, the bar is just visual noise here. */
+  scrollbar-width: none;
   /* auto rows mis-size to fractions of the container with these children
      (Chrome); max-content measures the square images correctly. */
   grid-auto-rows: max-content;
@@ -994,6 +996,10 @@ html, body {
   overflow-y: auto;
   align-content: start;
   -webkit-overflow-scrolling: touch;
+}
+
+.grid-layer::-webkit-scrollbar {
+  display: none;
 }
 
 .grid-layer[hidden],
