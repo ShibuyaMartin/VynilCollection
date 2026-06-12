@@ -155,6 +155,12 @@ async function init() {
   state.records = dedupeRecords((rows || []).map(rowToLegacyRecord));
   document.title = `${owner.display_name || owner.username} — Deadwax`;
 
+  const statsLink = document.getElementById("stats-link");
+  if (statsLink) {
+    statsLink.href = `/u/${owner.username}/stats`;
+    statsLink.hidden = false;
+  }
+
   buildFilters();
   bindEvents();
   syncFiltersFromControls();
