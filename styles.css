@@ -992,7 +992,9 @@ html, body {
      (Chrome); max-content measures the square images correctly. */
   grid-auto-rows: max-content;
   gap: 10px;
-  padding: 14px;
+  /* Top padding clears the fixed control buttons (12px + 36px + breathing
+     room), mirroring the search-bar band. */
+  padding: 72px 14px 14px;
   overflow-y: auto;
   align-content: start;
   -webkit-overflow-scrolling: touch;
@@ -1100,7 +1102,7 @@ html, body {
   .grid-layer {
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
-    padding: 10px;
+    padding: 64px 10px 10px;
   }
 }
 
