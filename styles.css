@@ -937,7 +937,7 @@ body.chrome-hidden .control-strip {
    follow pill is in it: icons stay on the first row, FOLLOW drops to a
    second right-aligned row. */
 @media (max-width: 720px) {
-  .control-strip { max-width: 224px; flex-wrap: wrap; row-gap: 8px!important; }
+  .control-strip { max-width: 252px; flex-wrap: wrap; row-gap: 8px!important; }
   .control-strip .follow-button { order: 2; padding: 7px 12px; }
 }
 .search-toggle { background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center; }
