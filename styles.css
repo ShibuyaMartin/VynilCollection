@@ -877,6 +877,20 @@ body::before {
 /* OVERRIDES */
 .control-strip { position:fixed!important;top:0;right:0;z-index:200;background:none!important;border:none!important;padding:12px!important;display:flex!important;align-items:center;justify-content:flex-end;gap:10px!important;width:auto!important;grid-template-columns:unset!important; }
 
+/* Etched in the run-out groove, like on the record it comes from. */
+.deadwax-etching {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text);
+  opacity: 0.07;
+  margin: 0;
+  padding: 3.5rem 1rem 1.75rem;
+  user-select: none;
+}
+
 /* The chrome (brand + controls) hides as soon as you scroll down and
    comes back on any scroll up. */
 .brand,
