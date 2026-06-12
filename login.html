@@ -119,10 +119,14 @@
         <p class="hint">No passwords — you'll get a sign-in link by email.</p>
       </form>
 
-      <!-- Step 2: link sent -->
-      <div id="sent-box" hidden>
-        <p class="hint" id="sent-copy">Check your email and open the link from this device.</p>
-      </div>
+      <!-- Step 2: code sent -->
+      <form id="code-form" hidden>
+        <p class="hint" id="sent-copy"></p>
+        <input id="code-input" name="code" type="text" inputmode="numeric" autocomplete="one-time-code"
+               placeholder="6-digit code" maxlength="6" pattern="[0-9]{6}" required>
+        <button type="submit" id="code-submit">Verify code</button>
+        <p class="hint">Or open the link in the email — both work.</p>
+      </form>
 
       <!-- Step 3: first login, choose a username -->
       <form id="profile-form" hidden>
@@ -137,6 +141,6 @@
       <a href="/">&larr; Back to collections</a>
     </div>
 
-    <script type="module" src="/js/login.js?v=1"></script>
+    <script type="module" src="/js/login.js?v=2"></script>
   </body>
 </html>

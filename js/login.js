@@ -10,7 +10,9 @@ const heading = document.getElementById("login-heading");
 const emailForm = document.getElementById("email-form");
 const emailInput = document.getElementById("email-input");
 const emailSubmit = document.getElementById("email-submit");
-const sentBox = document.getElementById("sent-box");
+const codeForm = document.getElementById("code-form");
+const codeInput = document.getElementById("code-input");
+const codeSubmit = document.getElementById("code-submit");
 const sentCopy = document.getElementById("sent-copy");
 const profileForm = document.getElementById("profile-form");
 const usernameInput = document.getElementById("username-input");
@@ -48,7 +50,7 @@ async function handleSignedIn() {
 
   heading.textContent = "Create your profile";
   emailForm.hidden = true;
-  sentBox.hidden = true;
+  codeForm.hidden = true;
   profileForm.hidden = false;
   usernameInput.focus();
 }
@@ -72,8 +74,28 @@ emailForm.addEventListener("submit", async (event) => {
   }
 
   emailForm.hidden = true;
-  sentBox.hidden = false;
-  sentCopy.textContent = `Magic link sent to ${email}. Open it on this device to sign in.`;
+  codeForm.hidden = false;
+  sentCopy.textContent = `Sent to ${email} — enter the 6-digit code from the email:`;
+  codeInput.focus();
+});
+
+codeForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  errorBox.textContent = "";
+  codeSubmit.disabled = true;
+
+  const { error } = await supabase.auth.verifyOtp({
+    email: emailInput.value.trim(),
+    token: codeInput.value.trim(),
+    type: "email",
+  });
+
+  codeSubmit.disabled = false;
+  if (error) {
+    errorBox.textContent = error.message;
+    return;
+  }
+  // onAuthStateChange(SIGNED_IN) takes it from here.
 });
 
 profileForm.addEventListener("submit", async (event) => {
