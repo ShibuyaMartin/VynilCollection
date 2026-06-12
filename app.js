@@ -1464,3 +1464,20 @@ function saveSceneTuning(values) {
     console.warn("Unable to save tuning values.", error);
   }
 }
+
+// Hide the fixed chrome (brand + controls) the moment you scroll down;
+// any upward scroll brings it back.
+let lastChromeScrollY = window.scrollY;
+window.addEventListener(
+  "scroll",
+  () => {
+    const y = window.scrollY;
+    if (y > 60 && y > lastChromeScrollY) {
+      document.body.classList.add("chrome-hidden");
+    } else if (y < lastChromeScrollY || y <= 60) {
+      document.body.classList.remove("chrome-hidden");
+    }
+    lastChromeScrollY = y;
+  },
+  { passive: true }
+);
