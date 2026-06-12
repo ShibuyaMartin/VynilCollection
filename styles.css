@@ -892,26 +892,26 @@ body::before {
   color: rgba(243, 237, 227, 0.09);
   background-image: linear-gradient(
     100deg,
-    rgba(243, 237, 227, 0) 42%,
-    rgba(243, 237, 227, 0.95) 50%,
-    rgba(243, 237, 227, 0) 58%
+    rgba(243, 237, 227, 0) 25%,
+    rgba(243, 237, 227, 0.35) 50%,
+    rgba(243, 237, 227, 0) 75%
   );
   background-repeat: no-repeat;
-  background-size: 34% 100%;
+  background-size: 55% 100%;
   background-position-y: 0;
-  background-position-x: var(--shine, -60%);
+  background-position-x: var(--shine, -80%);
   -webkit-background-clip: text;
   background-clip: text;
-  transition: background-position-x 0.3s ease-out;
+  transition: background-position-x 1.1s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes deadwax-sweep {
-  from { background-position-x: -60%; }
-  to { background-position-x: 160%; }
+  from { background-position-x: -80%; }
+  to { background-position-x: 180%; }
 }
 
 .deadwax-etching--sweep {
-  animation: deadwax-sweep 2.8s ease-in-out;
+  animation: deadwax-sweep 5s ease-in-out;
 }
 
 .deadwax-etching::selection {
