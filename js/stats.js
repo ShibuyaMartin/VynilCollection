@@ -64,6 +64,7 @@ async function init() {
     board("Top genres", renderBars(tally(records, (r) => listOf(r.genres)), 10)),
     board("Top styles", renderBars(tally(records, (r) => listOf(r.styles)), 10)),
     board("The blend", renderMosaic(records)),
+    board("Crate digger", renderDigger(profile.username), "wide"),
   );
   root.replaceChildren(boards);
 }
@@ -371,4 +372,119 @@ function renderMosaic(records) {
 
   wrap.append(mosaic, note);
   return wrap;
+}
+
+// --- Crate digger ---------------------------------------------------------------
+
+function renderDigger(username) {
+  const wrap = document.createElement("div");
+  wrap.className = "digger";
+
+  const intro = document.createElement("p");
+  intro.className = "digger-intro";
+  intro.textContent =
+    "A record you don't own, drawn from the styles on this shelf and ranked by how much the Discogs community hunts it.";
+
+  const controls = document.createElement("div");
+  controls.className = "digger-controls";
+
+  const rollButton = document.createElement("button");
+  rollButton.type = "button";
+  rollButton.className = "digger-roll";
+  rollButton.textContent = "Roll the crate";
+
+  const modernLabel = document.createElement("label");
+  modernLabel.className = "digger-modern";
+  const modernToggle = document.createElement("input");
+  modernToggle.type = "checkbox";
+  modernLabel.append(modernToggle, document.createTextNode(" 2010s and newer only"));
+
+  controls.append(rollButton, modernLabel);
+
+  const result = document.createElement("div");
+  result.className = "digger-result";
+
+  let rolling = false;
+  const roll = async () => {
+    if (rolling) return;
+    rolling = true;
+    rollButton.disabled = true;
+    result.innerHTML = '<p class="status">Digging…</p>';
+
+    try {
+      const era = modernToggle.checked ? "modern" : "any";
+      const response = await fetch(`/api/discover?username=${encodeURIComponent(username)}&era=${era}`);
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || "Dig failed");
+      }
+      renderPick(result, payload);
+      rollButton.textContent = "Roll again";
+    } catch (error) {
+      result.innerHTML = "";
+      const status = document.createElement("p");
+      status.className = "status";
+      status.textContent = `${error.message || "Dig failed"} — try another roll.`;
+      result.append(status);
+    } finally {
+      rolling = false;
+      rollButton.disabled = false;
+    }
+  };
+
+  rollButton.addEventListener("click", roll);
+  roll();
+
+  wrap.append(intro, controls, result);
+  return wrap;
+}
+
+function renderPick(result, payload) {
+  result.innerHTML = "";
+
+  const card = document.createElement("div");
+  card.className = "digger-card";
+
+  const cover = document.createElement("div");
+  cover.className = "digger-cover";
+  if (payload.pick.coverImage) {
+    const img = document.createElement("img");
+    img.src = payload.pick.coverImage;
+    img.alt = "";
+    img.loading = "lazy";
+    cover.append(img);
+  }
+
+  const info = document.createElement("div");
+  info.className = "digger-info";
+
+  const styleChip = document.createElement("p");
+  styleChip.className = "digger-style";
+  styleChip.textContent = `Because you collect ${payload.style}`;
+
+  const title = document.createElement("h3");
+  title.className = "digger-title";
+  title.textContent = payload.pick.title;
+
+  const meta = document.createElement("p");
+  meta.className = "digger-meta";
+  const bits = [];
+  if (payload.pick.year) bits.push(payload.pick.year);
+  bits.push(`${payload.pick.have} have · ${payload.pick.want} want`);
+  meta.textContent = bits.join(" · ");
+
+  info.append(styleChip, title, meta);
+
+  if (payload.pick.url) {
+    const link = document.createElement("a");
+    link.className = "digger-link";
+    link.href = payload.pick.url;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    link.textContent = "View on Discogs";
+    info.append(link);
+  }
+
+  card.append(cover, info);
+  result.append(card);
 }
