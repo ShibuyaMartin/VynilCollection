@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
     >
     <link rel="stylesheet" href="./styles.css?v=1775314412">
-    <script type="module" src="./app.js?v=1781149000"></script>
+    <script type="module" src="./app.js?v=1781156000"></script>
     <meta property="og:title" content="Vinilos Shibu">
   </head>
   <body>
@@ -23,6 +23,10 @@
       <section class="control-strip" aria-label="Collection controls">
         <button class="search-toggle" id="search-toggle" type="button" aria-label="Search">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg>
+        </button>
+        <button class="search-toggle" id="view-toggle" type="button" aria-label="Toggle grid view">
+          <svg id="view-icon-grid" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="2.5" width="4.5" height="4.5"/><rect x="9" y="2.5" width="4.5" height="4.5"/><rect x="2.5" y="9" width="4.5" height="4.5"/><rect x="9" y="9" width="4.5" height="4.5"/></svg>
+          <svg id="view-icon-flow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" hidden><rect x="5" y="3" width="6" height="10"/><line x1="1.5" y1="5" x2="1.5" y2="11"/><line x1="14.5" y1="5" x2="14.5" y2="11"/></svg>
         </button>
         <a class="search-toggle" href="./add.html" aria-label="Agregar disco">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="8" y1="2.5" x2="8" y2="13.5"/><line x1="2.5" y1="8" x2="13.5" y2="8"/></svg>
@@ -41,6 +45,7 @@
           <div class="gallery-ambience" aria-hidden="true"></div>
           <div class="gallery-stage" id="gallery-stage" aria-label="Cover flow vinyl gallery">
             <div class="cover-layer" id="cover-layer"></div>
+            <div class="grid-layer" id="grid-layer" hidden></div>
 
             <div class="scene-empty" id="scene-empty" hidden>
               <div class="scene-empty__box">
@@ -78,6 +83,7 @@
         <section class="album-panel" aria-live="polite">
           <div class="album-summary">
             <p class="album-summary__kicker" id="album-number">Record -</p>
+            <button class="view-in-flow" id="view-in-flow" type="button" hidden>View in flow &rarr;</button>
             <h1 class="album-summary__title" id="album-title">Pick a record</h1>
             <p class="album-summary__artist" id="album-artist">Artist details will appear here.</p>
             <p class="album-summary__meta" id="album-meta">Genre • Country • Year • Label</p>

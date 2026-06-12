@@ -978,3 +978,122 @@ html, body {
   overflow-x: hidden;
   max-width: 100vw;
 }
+
+/* --- Grid view ------------------------------------------------------------ */
+.grid-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  /* auto rows mis-size to fractions of the container with these children
+     (Chrome); max-content measures the square images correctly. */
+  grid-auto-rows: max-content;
+  gap: 10px;
+  padding: 14px;
+  overflow-y: auto;
+  align-content: start;
+  -webkit-overflow-scrolling: touch;
+}
+
+.grid-layer[hidden],
+.cover-layer[hidden],
+.transport[hidden] {
+  display: none !important;
+}
+
+.gallery-stage--grid::before,
+.gallery-stage--grid::after {
+  display: none;
+}
+
+.grid-cell {
+  position: relative;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* The image is the in-flow child that sizes the cell (and the grid row
+   track): replaced elements contribute their natural size during track
+   sizing, where percentage/aspect-ratio tricks on the cell itself resolve
+   to zero. Coverless cells get a 1x1 transparent GIF for the same reason. */
+.grid-cell__image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.grid-cell:hover .grid-cell__image {
+  opacity: 0.85;
+}
+
+.grid-cell.is-active {
+  outline: 2px solid var(--text);
+  outline-offset: -2px;
+}
+
+.grid-cell__label {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px;
+  text-align: center;
+}
+
+.grid-cell--placeholder .grid-cell__label {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px;
+  text-align: center;
+}
+
+.grid-cell__label-title {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.grid-cell__label-artist {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.view-in-flow {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0 0 0.4rem;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.view-in-flow:hover {
+  color: var(--text);
+}
+
+@media (max-width: 768px) {
+  .grid-layer {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 10px;
+  }
+}

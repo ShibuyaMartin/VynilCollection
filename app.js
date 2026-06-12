@@ -1,13 +1,20 @@
+const VIEW_MODE_STORAGE_KEY = "vinilos-view-mode";
+
 const state = {
   records: [],
   filteredRecords: [],
   activeIndex: 0,
+  viewMode: localStorage.getItem(VIEW_MODE_STORAGE_KEY) === "grid" ? "grid" : "flow",
   filters: {
     query: "",
     genre: "all",
     style: "all",
   },
 };
+
+// Tracks which filteredRecords array the grid DOM was built from, so the grid
+// is only rebuilt when the list changes (not on every active-record change).
+let gridRenderedFor = null;
 
 const interaction = {
   drag: null,
@@ -60,6 +67,12 @@ const elements = {
   sceneEmptyReset: document.querySelector("#scene-empty-reset"),
   galleryStage: document.querySelector("#gallery-stage"),
   coverLayer: document.querySelector("#cover-layer"),
+  gridLayer: document.querySelector("#grid-layer"),
+  viewToggle: document.querySelector("#view-toggle"),
+  viewIconGrid: document.querySelector("#view-icon-grid"),
+  viewIconFlow: document.querySelector("#view-icon-flow"),
+  viewInFlow: document.querySelector("#view-in-flow"),
+  transport: document.querySelector(".transport"),
   sceneEmpty: document.querySelector("#scene-empty"),
   prevButton: document.querySelector("#prev-button"),
   nextButton: document.querySelector("#next-button"),
@@ -103,11 +116,31 @@ async function init() {
   buildFilters();
   bindEvents();
   syncFiltersFromControls();
+  syncViewMode();
   applyFilters({ autoResetIfEmpty: true });
   initTuningPanel();
 }
 
 function bindEvents() {
+  elements.viewToggle?.addEventListener("click", () => {
+    setViewMode(state.viewMode === "grid" ? "flow" : "grid");
+  });
+
+  elements.viewInFlow?.addEventListener("click", () => {
+    setViewMode("flow");
+  });
+
+  elements.gridLayer?.addEventListener("click", (event) => {
+    const cell = event.target.closest(".grid-cell");
+    if (!cell) {
+      return;
+    }
+    const targetIndex = Number(cell.dataset.index || "-1");
+    if (targetIndex >= 0 && !Number.isNaN(targetIndex)) {
+      setActiveIndex(targetIndex);
+    }
+  });
+
   elements.searchToggle?.addEventListener("click", () => {
     openSearchOverlay();
   });
@@ -196,6 +229,10 @@ function handleViewportResize() {
 }
 
 function handlePointerDown(event) {
+  if (state.viewMode === "grid") {
+    return;
+  }
+
   interaction.drag = {
     pointerId: event.pointerId,
     startX: event.clientX,
@@ -243,7 +280,7 @@ function handlePointerUp(event) {
 }
 
 function handleWheel(event) {
-  if (!state.filteredRecords.length) {
+  if (state.viewMode === "grid" || !state.filteredRecords.length) {
     return;
   }
 
@@ -376,6 +413,39 @@ function render() {
   renderAlbumPanel();
 }
 
+function setViewMode(mode) {
+  if (mode === state.viewMode) {
+    return;
+  }
+
+  state.viewMode = mode;
+  localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+  syncViewMode();
+  render();
+}
+
+function syncViewMode() {
+  const isGrid = state.viewMode === "grid";
+
+  if (elements.gridLayer) {
+    elements.gridLayer.hidden = !isGrid;
+  }
+  elements.coverLayer.hidden = isGrid;
+  if (elements.transport) {
+    elements.transport.hidden = isGrid;
+  }
+  if (elements.viewIconGrid) {
+    elements.viewIconGrid.hidden = isGrid;
+  }
+  if (elements.viewIconFlow) {
+    elements.viewIconFlow.hidden = !isGrid;
+  }
+  if (elements.viewInFlow) {
+    elements.viewInFlow.hidden = !isGrid;
+  }
+  elements.galleryStage.classList.toggle("gallery-stage--grid", isGrid);
+}
+
 function renderStage() {
   const hasRecords = Boolean(state.filteredRecords.length);
 
@@ -386,7 +456,74 @@ function renderStage() {
   elements.nextButton.disabled =
     !hasRecords || state.activeIndex === state.filteredRecords.length - 1;
 
-  renderCoverLayer();
+  if (state.viewMode === "grid") {
+    renderGridLayer();
+  } else {
+    renderCoverLayer();
+  }
+}
+
+function renderGridLayer() {
+  if (!elements.gridLayer) {
+    return;
+  }
+
+  if (gridRenderedFor !== state.filteredRecords) {
+    gridRenderedFor = state.filteredRecords;
+    elements.gridLayer.replaceChildren(
+      ...state.filteredRecords.map((record, index) => createGridCell(record, index))
+    );
+  }
+
+  elements.gridLayer.querySelector(".grid-cell.is-active")?.classList.remove("is-active");
+  const activeCell = elements.gridLayer.children[state.activeIndex];
+  if (activeCell) {
+    activeCell.classList.add("is-active");
+    activeCell.scrollIntoView({ block: "nearest" });
+  }
+}
+
+function createGridCell(record, index) {
+  const cell = document.createElement("button");
+  cell.type = "button";
+  cell.className = "grid-cell";
+  cell.dataset.index = String(index);
+  cell.title = `${record.artist} — ${record.title}`;
+
+  const label = document.createElement("span");
+  label.className = "grid-cell__label";
+  const labelTitle = document.createElement("span");
+  labelTitle.className = "grid-cell__label-title";
+  labelTitle.textContent = record.title;
+  const labelArtist = document.createElement("span");
+  labelArtist.className = "grid-cell__label-artist";
+  labelArtist.textContent = record.artist;
+  label.append(labelTitle, labelArtist);
+  cell.append(label);
+
+  const TRANSPARENT_SQUARE =
+    "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+  const coverUrl = resolveCoverUrl(record.thumbUrl || record.coverUrl || "", record, "thumb");
+  const hasCover = Boolean(coverUrl) && !failedCoverUrls.has(coverUrl);
+
+  const image = document.createElement("img");
+  image.className = "grid-cell__image";
+  image.loading = "lazy";
+  image.decoding = "async";
+  image.referrerPolicy = "strict-origin-when-cross-origin";
+  image.alt = "";
+  image.src = hasCover ? coverUrl : TRANSPARENT_SQUARE;
+  if (!hasCover) {
+    cell.classList.add("grid-cell--placeholder");
+  }
+  image.addEventListener("error", () => {
+    failedCoverUrls.add(image.currentSrc || image.src);
+    image.src = TRANSPARENT_SQUARE;
+    cell.classList.add("grid-cell--placeholder");
+  });
+  cell.append(image);
+
+  return cell;
 }
 
 function renderCoverLayer() {
