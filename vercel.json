@@ -27,6 +27,10 @@
       "destination": "/explore.html"
     },
     {
+      "source": "/places",
+      "destination": "/places.html"
+    },
+    {
       "source": "/u/:username([a-z0-9-]+)/stats",
       "destination": "/stats.html"
     },

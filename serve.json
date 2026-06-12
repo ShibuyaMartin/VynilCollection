@@ -9,6 +9,10 @@
       "destination": "/explore.html"
     },
     {
+      "source": "/places",
+      "destination": "/places.html"
+    },
+    {
       "source": "/u/:username/stats",
       "destination": "/stats.html"
     },

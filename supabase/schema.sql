@@ -121,6 +121,41 @@ create policy "follows are public"  on public.follows for select using (true);
 create policy "follow as yourself"  on public.follows for insert with check (follower_id = auth.uid());
 create policy "unfollow yourself"   on public.follows for delete using (follower_id = auth.uid());
 
+-- ===== Places (stores, fairs, listening cafés) ==============================
+
+create table public.places (
+  id         uuid primary key default gen_random_uuid(),
+  osm_id     text unique,
+  added_by   uuid references public.profiles(id) on delete set null,
+  name       text not null check (char_length(name) <= 120),
+  kind       text not null check (kind in ('store', 'fair', 'cafe')),
+  city       text,
+  country    text,
+  lat        double precision not null,
+  lng        double precision not null,
+  website    text check (char_length(website) <= 300),
+  created_at timestamptz not null default now()
+);
+
+create table public.place_reviews (
+  place_id   uuid not null references public.places(id) on delete cascade,
+  author_id  uuid not null references public.profiles(id) on delete cascade,
+  rating     int not null check (rating between 1 and 5),
+  body       text check (char_length(body) <= 1000),
+  created_at timestamptz not null default now(),
+  primary key (place_id, author_id)
+);
+
+alter table public.places        enable row level security;
+alter table public.place_reviews enable row level security;
+
+create policy "places are public"     on public.places        for select using (true);
+create policy "add places signed in"  on public.places        for insert with check (added_by = auth.uid());
+create policy "reviews are public"    on public.place_reviews for select using (true);
+create policy "review as yourself"    on public.place_reviews for insert with check (author_id = auth.uid());
+create policy "edit own review"       on public.place_reviews for update using (author_id = auth.uid());
+create policy "delete own review"     on public.place_reviews for delete using (author_id = auth.uid());
+
 -- ===== Storage ==============================================================
 -- Create a PUBLIC bucket named exactly `covers` in Dashboard -> Storage.
 -- No storage policies needed: writes are service-role only, reads are public.
