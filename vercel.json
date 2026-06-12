@@ -1,24 +1,16 @@
 {
+  "redirects": [
+    { "source": "/", "destination": "/u/shibu", "permanent": false },
+    { "source": "/vinilos", "destination": "/u/shibu", "permanent": true },
+    { "source": "/vinilos/add", "destination": "/add", "permanent": true },
+    { "source": "/vinilos/:path*", "destination": "/u/shibu", "permanent": true }
+  ],
   "rewrites": [
-    {
-      "source": "/add",
-      "destination": "/add.html"
-    },
-    {
-      "source": "/vinilos/add",
-      "destination": "/add.html"
-    },
-    {
-      "source": "/vinilos",
-      "destination": "/"
-    },
-    {
-      "source": "/vinilos/",
-      "destination": "/"
-    },
-    {
-      "source": "/vinilos/:path*",
-      "destination": "/:path*"
-    }
+    { "source": "/u/:username([a-z0-9-]+)", "destination": "/index.html" },
+    { "source": "/add", "destination": "/add.html" },
+    { "source": "/login", "destination": "/login.html" }
+  ],
+  "crons": [
+    { "path": "/api/keepalive", "schedule": "0 9 * * *" }
   ]
 }
