@@ -1226,3 +1226,23 @@ body.overlay-open {
     width: 100%;
   }
 }
+
+/* --- Brand ------------------------------------------------------------------ */
+.brand {
+  position: fixed;
+  top: 22px;
+  left: 18px;
+  z-index: 200;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+
+.brand:hover {
+  opacity: 1;
+}
+
+.brand img {
+  height: 16px;
+  width: auto;
+  display: block;
+}
