@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
     >
     <link rel="stylesheet" href="/styles.css?v=1781210000">
-    <script type="module" src="/app.js?v=1781210000"></script>
+    <script type="module" src="/app.js?v=1781215000"></script>
     <meta property="og:title" content="Deadwax">
   </head>
   <body>
@@ -24,6 +24,7 @@
         <img src="/deadwax.svg" alt="Deadwax">
       </a>
       <section class="control-strip" aria-label="Collection controls">
+        <button class="follow-button" id="follow-button" type="button" hidden>Follow</button>
         <button class="search-toggle" id="search-toggle" type="button" aria-label="Search">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg>
         </button>
@@ -107,16 +108,6 @@
               <button class="social-like" id="like-button" type="button" aria-label="Like">
                 &hearts; <span id="like-count">0</span>
               </button>
-              <button class="social-ping" id="ping-button" type="button" hidden>Is this for sale?</button>
-            </div>
-
-            <div class="ping-form" id="ping-form" hidden>
-              <textarea id="ping-message" maxlength="500" rows="2" placeholder="Optional message for the owner"></textarea>
-              <label class="ping-share">
-                <input type="checkbox" id="ping-share-email"> Share my email so they can reply directly
-              </label>
-              <button class="ping-send" id="ping-send" type="button">Send</button>
-              <p class="social-note" id="ping-status"></p>
             </div>
 
           </div>

@@ -105,6 +105,22 @@ create policy "delete own or on own record" on public.comments for delete
 -- rate limit cannot be bypassed.
 create policy "see own sent pings"   on public.pings    for select using (sender_id = auth.uid());
 
+-- ===== Follows ==============================================================
+
+create table public.follows (
+  follower_id  uuid not null references public.profiles(id) on delete cascade,
+  following_id uuid not null references public.profiles(id) on delete cascade,
+  created_at   timestamptz not null default now(),
+  primary key (follower_id, following_id),
+  check (follower_id <> following_id)
+);
+
+alter table public.follows enable row level security;
+
+create policy "follows are public"  on public.follows for select using (true);
+create policy "follow as yourself"  on public.follows for insert with check (follower_id = auth.uid());
+create policy "unfollow yourself"   on public.follows for delete using (follower_id = auth.uid());
+
 -- ===== Storage ==============================================================
 -- Create a PUBLIC bucket named exactly `covers` in Dashboard -> Storage.
 -- No storage policies needed: writes are service-role only, reads are public.

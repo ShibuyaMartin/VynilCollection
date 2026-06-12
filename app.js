@@ -161,7 +161,7 @@ async function init() {
   syncViewMode();
   applyFilters({ autoResetIfEmpty: true });
   initTuningPanel();
-  await initSocial();
+  await initSocial(state.owner);
   render();
 }
 

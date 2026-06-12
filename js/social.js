@@ -1,6 +1,5 @@
-// Social layer for a record: likes, comments and the "is this for sale?"
-// ping. Likes and comments talk straight to Supabase under RLS; the ping
-// goes through /api/ping (rate-limited, owner email stays server-side).
+// Social layer: likes and comments per record, plus following the
+// collection's owner. Everything talks straight to Supabase under RLS.
 
 import { supabase } from "/js/supabase-client.js";
 import { getSession, getOwnProfile } from "/js/auth.js";
@@ -9,12 +8,7 @@ const els = {
   strip: document.getElementById("social-strip"),
   likeButton: document.getElementById("like-button"),
   likeCount: document.getElementById("like-count"),
-  pingButton: document.getElementById("ping-button"),
-  pingForm: document.getElementById("ping-form"),
-  pingMessage: document.getElementById("ping-message"),
-  pingShareEmail: document.getElementById("ping-share-email"),
-  pingSend: document.getElementById("ping-send"),
-  pingStatus: document.getElementById("ping-status"),
+  followButton: document.getElementById("follow-button"),
   commentsPanel: document.getElementById("comments-panel"),
   commentsStatus: document.getElementById("comments-status"),
   commentsList: document.getElementById("comments-list"),
@@ -31,13 +25,15 @@ let likedByMe = false;
 let likeTotal = 0;
 let fetchToken = 0;
 
-export async function initSocial() {
+export async function initSocial(owner) {
   if (!els.strip) {
     return;
   }
 
   session = await getSession();
   viewerId = session?.user?.id || null;
+
+  await initFollow(owner);
 
   const loginHere = () =>
     window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname)}`);
@@ -58,48 +54,6 @@ export async function initSocial() {
       await supabase.from("likes").insert({ record_id: currentRecordId, user_id: viewerId });
     } else {
       await supabase.from("likes").delete().eq("record_id", currentRecordId).eq("user_id", viewerId);
-    }
-  });
-
-  els.pingButton.addEventListener("click", () => {
-    if (!viewerId) {
-      loginHere();
-      return;
-    }
-    els.pingForm.hidden = !els.pingForm.hidden;
-    els.pingStatus.textContent = "";
-  });
-
-  els.pingSend.addEventListener("click", async () => {
-    if (!currentRecordId) return;
-    els.pingSend.disabled = true;
-    els.pingStatus.textContent = "Sending…";
-
-    try {
-      const { data } = await supabase.auth.getSession();
-      const response = await fetch("/api/ping", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${data.session?.access_token || ""}`,
-        },
-        body: JSON.stringify({
-          recordId: currentRecordId,
-          message: els.pingMessage.value.trim() || undefined,
-          includeEmail: els.pingShareEmail.checked,
-        }),
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || `Error ${response.status}`);
-      els.pingStatus.textContent = payload.message || "Sent!";
-      els.pingMessage.value = "";
-      setTimeout(() => {
-        els.pingForm.hidden = true;
-      }, 2500);
-    } catch (error) {
-      els.pingStatus.textContent = error.message;
-    } finally {
-      els.pingSend.disabled = false;
     }
   });
 
@@ -151,8 +105,6 @@ export async function renderSocial(record, ownerId) {
   currentOwnerId = ownerId;
   els.strip.hidden = false;
   els.commentsPanel.hidden = false;
-  els.pingForm.hidden = true;
-  els.pingButton.hidden = !viewerId || viewerId === ownerId;
   els.commentForm.hidden = !viewerId;
   els.commentsSignin.hidden = Boolean(viewerId);
 
@@ -229,4 +181,46 @@ async function loadComments(recordId, token) {
       return item;
     })
   );
+}
+
+// --- Follow -----------------------------------------------------------------
+
+async function initFollow(owner) {
+  const button = els.followButton;
+  if (!button || !owner || viewerId === owner.id) {
+    return;
+  }
+
+  let following = false;
+  if (viewerId) {
+    const { data } = await supabase
+      .from("follows")
+      .select("follower_id")
+      .eq("follower_id", viewerId)
+      .eq("following_id", owner.id)
+      .maybeSingle();
+    following = Boolean(data);
+  }
+
+  const paint = () => {
+    button.textContent = following ? "Following" : "Follow";
+    button.classList.toggle("is-following", following);
+  };
+  paint();
+  button.hidden = false;
+
+  button.addEventListener("click", async () => {
+    if (!viewerId) {
+      window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+
+    following = !following;
+    paint();
+    if (following) {
+      await supabase.from("follows").insert({ follower_id: viewerId, following_id: owner.id });
+    } else {
+      await supabase.from("follows").delete().eq("follower_id", viewerId).eq("following_id", owner.id);
+    }
+  });
 }

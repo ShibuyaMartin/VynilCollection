@@ -36,7 +36,7 @@ async function init() {
 
   // Covers and counts per collection (aggregates are disabled on Supabase,
   // so counts come from head requests; the profile list is small).
-  const [coverRows, counts] = await Promise.all([
+  const [coverRows, counts, followerCounts] = await Promise.all([
     Promise.all(
       profiles.map((profile) =>
         supabase
@@ -55,6 +55,15 @@ async function init() {
           .from("records")
           .select("id", { count: "exact", head: true })
           .eq("owner_id", profile.id)
+          .then((result) => result.count || 0)
+      )
+    ),
+    Promise.all(
+      profiles.map((profile) =>
+        supabase
+          .from("follows")
+          .select("follower_id", { count: "exact", head: true })
+          .eq("following_id", profile.id)
           .then((result) => result.count || 0)
       )
     ),
@@ -89,7 +98,10 @@ async function init() {
       const meta = document.createElement("p");
       meta.className = "meta";
       const count = counts[index];
-      meta.textContent = `@${profile.username} · ${count} record${count === 1 ? "" : "s"}`;
+      const followers = followerCounts[index];
+      meta.textContent =
+        `@${profile.username} · ${count} record${count === 1 ? "" : "s"}` +
+        (followers ? ` · ${followers} follower${followers === 1 ? "" : "s"}` : "");
 
       card.append(covers, name, meta);
 
