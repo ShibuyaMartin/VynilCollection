@@ -1465,19 +1465,23 @@ function saveSceneTuning(values) {
   }
 }
 
-// Hide the fixed chrome (brand + controls) the moment you scroll down;
-// any upward scroll brings it back.
+// Hide the fixed chrome (brand + controls) the moment you start scrolling
+// down; any upward scroll brings it back. Deltas under 2px are ignored so
+// momentum-scroll jitter can't make it flicker.
 let lastChromeScrollY = window.scrollY;
 window.addEventListener(
   "scroll",
   () => {
     const y = window.scrollY;
-    if (y > 60 && y > lastChromeScrollY) {
-      document.body.classList.add("chrome-hidden");
-    } else if (y < lastChromeScrollY || y <= 60) {
-      document.body.classList.remove("chrome-hidden");
-    }
+    const delta = y - lastChromeScrollY;
+    if (Math.abs(delta) < 2) return;
     lastChromeScrollY = y;
+
+    if (y <= 8 || delta < 0) {
+      document.body.classList.remove("chrome-hidden");
+    } else {
+      document.body.classList.add("chrome-hidden");
+    }
   },
   { passive: true }
 );
