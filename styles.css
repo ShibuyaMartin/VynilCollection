@@ -875,7 +875,33 @@ body::before {
 }
 
 /* OVERRIDES */
-.control-strip { position:fixed!important;top:0;right:0;z-index:200;background:none!important;border:none!important;padding:12px!important;display:flex!important;align-items:center;justify-content:flex-end;width:auto!important;grid-template-columns:unset!important; }
+.control-strip { position:fixed!important;top:0;right:0;z-index:200;background:none!important;border:none!important;padding:12px!important;display:flex!important;align-items:center;justify-content:flex-end;gap:10px!important;width:auto!important;grid-template-columns:unset!important; }
+
+/* Top fade: scrolling content dissolves under the fixed brand/controls
+   instead of crashing into them. */
+.app-shell::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 96px;
+  z-index: 150;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.94), rgba(0, 0, 0, 0.55) 55%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  mask-image: linear-gradient(to bottom, #000 35%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 35%, transparent);
+}
+
+/* On narrow screens the strip can't share a row with the logo once the
+   follow pill is in it: icons stay on the first row, FOLLOW drops to a
+   second right-aligned row. */
+@media (max-width: 720px) {
+  .control-strip { max-width: 224px; flex-wrap: wrap; row-gap: 8px!important; }
+  .control-strip .follow-button { order: 2; padding: 7px 12px; }
+}
 .search-toggle { background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center; }
 .search-overlay { position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(0,0,0,0.92);backdrop-filter:blur(16px);padding:12px 16px;display:flex;align-items:center;gap:12px; }
 .search-overlay input { flex:1;background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.2);color:#fff;font-family:var(--font-sans);font-size:1rem;padding:8px 0;outline:none; }
