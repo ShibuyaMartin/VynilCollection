@@ -913,7 +913,7 @@ function renderAlbumPanel() {
   }
 
   const ownerName = state.owner ? (state.owner.display_name || state.owner.username) : "";
-  elements.albumNumber.textContent = `${ownerName ? `${ownerName} \u00b7 ` : ""}Record ${record.number} / ${state.filteredRecords.length}`;
+  elements.albumNumber.textContent = `${ownerName ? `${ownerName} \u00b7 ` : ""}Record ${state.activeIndex + 1} / ${state.filteredRecords.length}`;
   elements.albumTitle.textContent = record.title;
   elements.albumArtist.textContent = record.artist;
   elements.albumMeta.textContent = buildMetaLine(record);
