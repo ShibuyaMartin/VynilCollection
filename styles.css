@@ -877,33 +877,11 @@ body::before {
 /* OVERRIDES */
 .control-strip { position:fixed!important;top:0;right:0;z-index:200;background:none!important;border:none!important;padding:12px!important;display:flex!important;align-items:center;justify-content:flex-end;gap:10px!important;width:auto!important;grid-template-columns:unset!important; }
 
-/* Top fade: scrolling content dissolves under the fixed brand/controls
-   instead of crashing into them. */
-.app-shell::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 96px;
-  z-index: 150;
-  pointer-events: none;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.94), rgba(0, 0, 0, 0.55) 55%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  mask-image: linear-gradient(to bottom, #000 35%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, #000 35%, transparent);
-}
-
-/* The chrome (brand + controls + fade band) hides as soon as you scroll
-   down and comes back on any scroll up. */
+/* The chrome (brand + controls) hides as soon as you scroll down and
+   comes back on any scroll up. */
 .brand,
 .control-strip {
   transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.app-shell::before {
-  transition: opacity 0.25s ease;
 }
 
 body.chrome-hidden .brand,
@@ -911,10 +889,6 @@ body.chrome-hidden .control-strip {
   opacity: 0;
   transform: translateY(-10px);
   pointer-events: none;
-}
-
-body.chrome-hidden .app-shell::before {
-  opacity: 0;
 }
 
 /* On narrow screens the strip can't share a row with the logo once the
