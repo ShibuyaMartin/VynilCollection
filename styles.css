@@ -1132,23 +1132,23 @@ body.overlay-open {
 
 .record-overlay__inner {
   display: grid;
-  grid-template-columns: minmax(360px, 1.25fr) minmax(340px, 0.85fr);
+  /* The media column is exactly as wide as the artwork, and the pair is
+     centered as a unit on the screen. */
+  grid-template-columns: auto minmax(340px, 640px);
   gap: 72px;
   align-items: start;
+  justify-content: center;
 }
 
 .record-overlay__media {
   margin: 0;
   position: sticky;
   top: 0;
+  width: min(44vw, calc(100dvh - 160px));
 }
 
 .record-overlay__image {
   width: 100%;
-  /* Square covers: keep them within the viewport height so the artwork
-     dominates without forcing a scroll just to see it whole. */
-  max-width: calc(100dvh - 150px);
-  margin-inline: auto;
   display: block;
   border: 1px solid var(--border);
   box-shadow: 0 32px 90px rgba(0, 0, 0, 0.7);
