@@ -7,15 +7,15 @@
 //   SUPABASE_SERVICE_ROLE_KEY=... \
 //   node scripts/migrate_to_supabase.mjs
 //
-// Optional: OWNER_EMAIL (default shibu@decentraland.org),
-//           OWNER_USERNAME (default shibu), OWNER_NAME (default Martín).
+// Required: OWNER_EMAIL (the login email for the owner account).
+// Optional: OWNER_USERNAME (default shibu), OWNER_NAME (default Martín).
 
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 
 const SUPABASE_URL = required("SUPABASE_URL");
 const SERVICE_KEY = required("SUPABASE_SERVICE_ROLE_KEY");
-const OWNER_EMAIL = process.env.OWNER_EMAIL || "shibu@decentraland.org";
+const OWNER_EMAIL = required("OWNER_EMAIL");
 const OWNER_USERNAME = process.env.OWNER_USERNAME || "shibu";
 const OWNER_NAME = process.env.OWNER_NAME || "Martín";
 
