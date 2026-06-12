@@ -9,6 +9,12 @@ const els = {
   likeButton: document.getElementById("like-button"),
   likeCount: document.getElementById("like-count"),
   followButton: document.getElementById("follow-button"),
+  ownerEditToggle: document.getElementById("owner-edit-toggle"),
+  ownerEditPanel: document.getElementById("owner-edit-panel"),
+  ownerReplaceInput: document.getElementById("owner-replace-input"),
+  ownerReplaceButton: document.getElementById("owner-replace-button"),
+  ownerDelete: document.getElementById("owner-delete"),
+  ownerStatus: document.getElementById("owner-status"),
   commentsPanel: document.getElementById("comments-panel"),
   commentsStatus: document.getElementById("comments-status"),
   commentsList: document.getElementById("comments-list"),
@@ -19,6 +25,7 @@ const els = {
 
 let session = null;
 let viewerId = null;
+let currentRecord = null;
 let currentRecordId = null;
 let currentOwnerId = null;
 let likedByMe = false;
@@ -85,6 +92,71 @@ export async function initSocial(owner) {
     await supabase.from("comments").delete().eq("id", button.dataset.deleteComment);
     await loadComments(currentRecordId, fetchToken);
   });
+
+  initOwnerTools();
+}
+
+// --- Owner tools: replace edition / delete --------------------------------
+
+function initOwnerTools() {
+  if (!els.ownerEditToggle) return;
+
+  els.ownerEditToggle.addEventListener("click", () => {
+    els.ownerEditPanel.hidden = !els.ownerEditPanel.hidden;
+    els.ownerStatus.textContent = "";
+  });
+
+  els.ownerDelete.addEventListener("click", async () => {
+    if (!currentRecord) return;
+    const name = `${currentRecord.artist} - ${currentRecord.title}`;
+    if (!window.confirm(`Delete "${name}" from your collection? This also removes its likes and comments.`)) {
+      return;
+    }
+    await ownerRequest("DELETE", { recordId: currentRecordId }, "Deleting…", "Deleted — reloading…");
+  });
+
+  els.ownerReplaceButton.addEventListener("click", async () => {
+    if (!currentRecord) return;
+    const raw = els.ownerReplaceInput.value.trim();
+    const releaseId = (raw.match(/release\/(\d+)/) || raw.match(/^(\d+)$/) || [])[1];
+    if (!releaseId) {
+      els.ownerStatus.textContent = "Paste a Discogs release URL or its numeric ID.";
+      return;
+    }
+    await ownerRequest(
+      "PATCH",
+      { recordId: currentRecordId, releaseId },
+      "Fetching the new edition from Discogs…",
+      "Edition replaced — reloading…"
+    );
+  });
+}
+
+async function ownerRequest(method, body, busyText, doneText) {
+  els.ownerDelete.disabled = true;
+  els.ownerReplaceButton.disabled = true;
+  els.ownerStatus.textContent = busyText;
+
+  try {
+    const response = await fetch("/api/records", {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify(body),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || "Request failed");
+    }
+    els.ownerStatus.textContent = doneText;
+    window.location.reload();
+  } catch (error) {
+    els.ownerStatus.textContent = error.message || "Request failed";
+    els.ownerDelete.disabled = false;
+    els.ownerReplaceButton.disabled = false;
+  }
 }
 
 // Called whenever the active record changes. `record.id` is the row uuid.
@@ -96,17 +168,27 @@ export async function renderSocial(record, ownerId) {
   const token = ++fetchToken;
 
   if (!record) {
+    currentRecord = null;
+    currentRecordId = null;
     els.strip.hidden = true;
     els.commentsPanel.hidden = true;
+    els.ownerEditPanel.hidden = true;
     return;
   }
 
+  currentRecord = record;
   currentRecordId = record.id;
   currentOwnerId = ownerId;
   els.strip.hidden = false;
   els.commentsPanel.hidden = false;
   els.commentForm.hidden = !viewerId;
   els.commentsSignin.hidden = Boolean(viewerId);
+
+  // Owner tools reset on every record change.
+  els.ownerEditToggle.hidden = !(viewerId && viewerId === ownerId);
+  els.ownerEditPanel.hidden = true;
+  els.ownerStatus.textContent = "";
+  els.ownerReplaceInput.value = "";
 
   // Reset while loading.
   likeTotal = 0;

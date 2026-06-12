@@ -14,8 +14,8 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
     >
-    <link rel="stylesheet" href="/styles.css?v=1781210000">
-    <script type="module" src="/app.js?v=1781217000"></script>
+    <link rel="stylesheet" href="/styles.css?v=1781218000">
+    <script type="module" src="/app.js?v=1781218000"></script>
     <meta property="og:title" content="Deadwax">
   </head>
   <body>
@@ -111,6 +111,16 @@
               <button class="social-like" id="like-button" type="button" aria-label="Like">
                 &hearts; <span id="like-count">0</span>
               </button>
+              <button class="owner-edit-toggle" id="owner-edit-toggle" type="button" hidden>Edit</button>
+            </div>
+
+            <div class="owner-edit-panel" id="owner-edit-panel" hidden>
+              <div class="owner-replace">
+                <input id="owner-replace-input" name="discogs-release" placeholder="Discogs release URL or ID" autocomplete="off">
+                <button id="owner-replace-button" type="button">Replace edition</button>
+              </div>
+              <button class="owner-delete" id="owner-delete" type="button">Delete from collection</button>
+              <p class="social-note" id="owner-status"></p>
             </div>
 
           </div>

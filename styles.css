@@ -1290,6 +1290,72 @@ body.overlay-open {
   border-color: var(--border);
 }
 
+.owner-edit-toggle {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 9px 14px;
+  cursor: pointer;
+}
+
+.owner-edit-toggle:hover { color: var(--text); border-color: var(--border-strong); }
+
+.owner-edit-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 0.9rem;
+  border: 1px solid var(--border);
+  padding: 12px;
+}
+
+.owner-replace {
+  display: flex;
+  gap: 8px;
+}
+
+.owner-replace input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  padding: 6px 0;
+  outline: none;
+}
+
+.owner-replace button,
+.owner-delete {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  padding: 8px 12px;
+  cursor: pointer;
+  flex: none;
+}
+
+.owner-delete { align-self: flex-start; }
+
+.owner-delete:hover {
+  background: var(--text);
+  border-color: var(--text);
+  color: #000;
+}
+
+.owner-replace button:disabled,
+.owner-delete:disabled { opacity: 0.5; cursor: wait; }
+
 .social-note {
   margin: 0;
   font-size: 0.75rem;

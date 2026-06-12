@@ -1,6 +1,8 @@
-// Creates a record in the caller's collection: verifies the Supabase session
-// token, fetches the Discogs release, inserts the row (service role) and
-// uploads the cover to Storage. Replaces the old GitHub-commit flow.
+// Records in the caller's collection: create (POST), replace the Discogs
+// edition (PATCH) and delete (DELETE). Every method verifies the Supabase
+// session token and checks ownership in code — writes go through the
+// service role, which bypasses RLS, so the body is never trusted for
+// identity.
 
 const DISCOGS_API = "https://api.discogs.com";
 const USER_AGENT = "Deadwax/1.0";
@@ -8,10 +10,6 @@ const MAX_RECORDS_PER_COLLECTION = 500;
 const MAX_COVER_BYTES = 2 * 1024 * 1024;
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Use POST" });
-  }
-
   const missing = ["SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY", "DISCOGS_TOKEN"].filter(
     (name) => !process.env[name]
   );
@@ -19,20 +17,23 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: `Missing env vars: ${missing.join(", ")}` });
   }
 
+  const accessToken = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  if (!accessToken) {
+    return res.status(401).json({ error: "Sign in first" });
+  }
+  const user = await verifyUser(accessToken);
+  if (!user) {
+    return res.status(401).json({ error: "Session expired — sign in again" });
+  }
+
+  if (req.method === "POST") return handleCreate(req, res, user);
+  if (req.method === "DELETE") return handleDelete(req, res, user);
+  if (req.method === "PATCH") return handleReplace(req, res, user);
+  return res.status(405).json({ error: "Use POST, PATCH or DELETE" });
+}
+
+async function handleCreate(req, res, user) {
   try {
-    // 1. Verify the caller's session token. owner_id ALWAYS comes from the
-    //    verified JWT — this function writes with the service role, which
-    //    bypasses RLS, so the body is never trusted for identity.
-    const accessToken = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-    if (!accessToken) {
-      return res.status(401).json({ error: "Sign in to add records" });
-    }
-
-    const user = await verifyUser(accessToken);
-    if (!user) {
-      return res.status(401).json({ error: "Session expired — sign in again" });
-    }
-
     const profile = await restFetch(`/rest/v1/profiles?id=eq.${user.id}&select=id,username,display_name`);
     if (!profile.length) {
       return res.status(403).json({ error: "Create your profile first" });
@@ -118,6 +119,110 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(502).json({ error: error.message || "Failed to add record" });
   }
+}
+
+// Loads a record and confirms the caller owns it. Returns null after
+// responding when it doesn't exist or belongs to someone else.
+async function loadOwnRecord(req, res, user) {
+  const { recordId } = req.body || {};
+  if (!recordId || !/^[0-9a-f-]{36}$/.test(String(recordId))) {
+    res.status(400).json({ error: "recordId is required" });
+    return null;
+  }
+  const records = await restFetch(
+    `/rest/v1/records?id=eq.${recordId}&select=id,owner_id,position,artist,title,cover_path,barcode,comment,cover_condition,disc_condition`
+  );
+  if (!records.length) {
+    res.status(404).json({ error: "Record not found" });
+    return null;
+  }
+  if (records[0].owner_id !== user.id) {
+    res.status(403).json({ error: "Not your record" });
+    return null;
+  }
+  return records[0];
+}
+
+async function handleDelete(req, res, user) {
+  try {
+    const record = await loadOwnRecord(req, res, user);
+    if (!record) return;
+
+    const response = await fetch(`${process.env.SUPABASE_URL}/rest/v1/records?id=eq.${record.id}`, {
+      method: "DELETE",
+      headers: serviceHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error(`Supabase delete responded ${response.status}`);
+    }
+
+    if (record.cover_path) {
+      await deleteCover(record.cover_path);
+    }
+
+    return res.status(200).json({ ok: true, message: `Deleted ${record.artist} - ${record.title}` });
+  } catch (error) {
+    return res.status(502).json({ error: error.message || "Failed to delete record" });
+  }
+}
+
+// Swaps the record's Discogs edition: same row, same position and personal
+// notes — all release data and the cover come from the new release id.
+async function handleReplace(req, res, user) {
+  try {
+    const record = await loadOwnRecord(req, res, user);
+    if (!record) return;
+
+    const releaseId = String(req.body?.releaseId || "").trim();
+    if (!/^\d+$/.test(releaseId)) {
+      return res.status(400).json({ error: "releaseId is required" });
+    }
+
+    const release = await discogsFetch(`/releases/${encodeURIComponent(releaseId)}`);
+
+    const fields = buildRow({
+      ownerId: record.owner_id,
+      position: record.position,
+      release,
+      barcode: record.barcode,
+      coverCondition: record.cover_condition,
+      discCondition: record.disc_condition,
+      comment: record.comment,
+    });
+    delete fields.owner_id;
+    delete fields.position;
+    delete fields.added_via;
+
+    // New cover under a release-suffixed name so the public URL changes and
+    // no browser keeps showing the old edition's cached image.
+    const cover = await downloadCover(release);
+    if (cover && cover.length <= MAX_COVER_BYTES) {
+      const coverPath = `${record.owner_id}/${record.id}-${release.id}.jpg`;
+      if (await uploadCover(coverPath, cover)) {
+        fields.cover_path = coverPath;
+      }
+    }
+
+    await restPatch(`/rest/v1/records?id=eq.${record.id}`, fields);
+
+    if (fields.cover_path && record.cover_path && record.cover_path !== fields.cover_path) {
+      await deleteCover(record.cover_path);
+    }
+
+    return res.status(200).json({
+      ok: true,
+      record: { artist: fields.artist, title: fields.title, year: fields.year },
+    });
+  } catch (error) {
+    return res.status(502).json({ error: error.message || "Failed to replace edition" });
+  }
+}
+
+async function deleteCover(path) {
+  await fetch(`${process.env.SUPABASE_URL}/storage/v1/object/covers/${path}`, {
+    method: "DELETE",
+    headers: serviceHeaders(),
+  }).catch(() => {});
 }
 
 function buildRow({ ownerId, position, release, barcode, coverCondition, discCondition, comment }) {
