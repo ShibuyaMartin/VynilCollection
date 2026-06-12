@@ -169,8 +169,9 @@ async function createDetector() {
     }
   }
 
+  // Version pinned: an unpinned @2 broke when 2.2.x moved the dist layout.
   const { readBarcodes } = await import(
-    "https://cdn.jsdelivr.net/npm/zxing-wasm@2/dist/reader/index.js"
+    "https://cdn.jsdelivr.net/npm/zxing-wasm@2.2.4/dist/es/reader/index.js"
   );
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d", { willReadFrequently: true });
