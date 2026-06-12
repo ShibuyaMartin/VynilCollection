@@ -73,6 +73,10 @@ const elements = {
   viewIconFlow: document.querySelector("#view-icon-flow"),
   viewInFlow: document.querySelector("#view-in-flow"),
   transport: document.querySelector(".transport"),
+  lightbox: document.querySelector("#cover-lightbox"),
+  lightboxImage: document.querySelector("#cover-lightbox-image"),
+  lightboxCaption: document.querySelector("#cover-lightbox-caption"),
+  lightboxClose: document.querySelector("#cover-lightbox-close"),
   sceneEmpty: document.querySelector("#scene-empty"),
   prevButton: document.querySelector("#prev-button"),
   nextButton: document.querySelector("#next-button"),
@@ -138,7 +142,16 @@ function bindEvents() {
     const targetIndex = Number(cell.dataset.index || "-1");
     if (targetIndex >= 0 && !Number.isNaN(targetIndex)) {
       setActiveIndex(targetIndex);
+      openLightbox(state.filteredRecords[targetIndex]);
     }
+  });
+
+  elements.lightbox?.addEventListener("click", () => {
+    closeLightbox();
+  });
+
+  elements.lightboxClose?.addEventListener("click", () => {
+    closeLightbox();
   });
 
   elements.searchToggle?.addEventListener("click", () => {
@@ -180,6 +193,11 @@ function bindEvents() {
   });
 
   document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !elements.lightbox?.hidden) {
+      closeLightbox();
+      return;
+    }
+
     if (event.key === "Escape" && !elements.searchOverlay?.hidden) {
       closeSearchOverlay();
       return;
@@ -219,6 +237,31 @@ function closeSearchOverlay() {
   }
 
   elements.searchOverlay.hidden = true;
+}
+
+function openLightbox(record) {
+  if (!elements.lightbox || !record) {
+    return;
+  }
+
+  const coverUrl = resolveCoverUrl(record.coverUrl || record.thumbUrl || "", record, "cover");
+  if (!coverUrl || failedCoverUrls.has(coverUrl)) {
+    return;
+  }
+
+  elements.lightboxImage.src = coverUrl;
+  elements.lightboxImage.alt = `${record.artist} — ${record.title}`;
+  elements.lightboxCaption.textContent = `${record.artist} — ${record.title}`;
+  elements.lightbox.hidden = false;
+}
+
+function closeLightbox() {
+  if (!elements.lightbox) {
+    return;
+  }
+
+  elements.lightbox.hidden = true;
+  elements.lightboxImage.src = "";
 }
 
 function handleViewportResize() {
@@ -639,6 +682,11 @@ function createCoverCard() {
 
     const targetIndex = Number(card.dataset.index || "-1");
     if (targetIndex < 0 || Number.isNaN(targetIndex)) {
+      return;
+    }
+
+    if (targetIndex === state.activeIndex) {
+      openLightbox(state.filteredRecords[targetIndex]);
       return;
     }
 
