@@ -75,7 +75,7 @@ emailForm.addEventListener("submit", async (event) => {
 
   emailForm.hidden = true;
   codeForm.hidden = false;
-  sentCopy.textContent = `Sent to ${email} — enter the 6-digit code from the email:`;
+  sentCopy.textContent = `Sent to ${email} — enter the sign-in code from the email:`;
   codeInput.focus();
 });
 

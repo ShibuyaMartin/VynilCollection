@@ -123,7 +123,7 @@
       <form id="code-form" hidden>
         <p class="hint" id="sent-copy"></p>
         <input id="code-input" name="code" type="text" inputmode="numeric" autocomplete="one-time-code"
-               placeholder="6-digit code" maxlength="6" pattern="[0-9]{6}" required>
+               placeholder="Sign-in code" maxlength="10" pattern="[0-9]{6,10}" required>
         <button type="submit" id="code-submit">Verify code</button>
         <p class="hint">Or open the link in the email — both work.</p>
       </form>
@@ -141,6 +141,6 @@
       <a href="/">&larr; Back to collections</a>
     </div>
 
-    <script type="module" src="/js/login.js?v=2"></script>
+    <script type="module" src="/js/login.js?v=3"></script>
   </body>
 </html>
