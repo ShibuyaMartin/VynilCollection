@@ -123,6 +123,7 @@ async function init() {
   syncViewMode();
   applyFilters({ autoResetIfEmpty: true });
   initTuningPanel();
+  document.dispatchEvent(new CustomEvent("collection:ready"));
 }
 
 function bindEvents() {

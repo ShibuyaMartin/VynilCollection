@@ -1150,3 +1150,24 @@ html, body {
   font-size: 0.9rem;
   cursor: pointer;
 }
+
+/* --- Splash ------------------------------------------------------------------ */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: #000;
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}
+
+.splash--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.splash canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
