@@ -1118,7 +1118,7 @@ html, body {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 56px 28px 48px;
+  padding: 48px 48px 40px;
 }
 
 /* Freeze the page behind the overlay so scroll can't chain into the grid. */
@@ -1132,11 +1132,9 @@ body.overlay-open {
 
 .record-overlay__inner {
   display: grid;
-  grid-template-columns: minmax(300px, 0.95fr) minmax(320px, 1.05fr);
-  gap: 64px;
+  grid-template-columns: minmax(360px, 1.25fr) minmax(340px, 0.85fr);
+  gap: 72px;
   align-items: start;
-  max-width: 1280px;
-  margin: 0 auto;
 }
 
 .record-overlay__media {
@@ -1147,6 +1145,10 @@ body.overlay-open {
 
 .record-overlay__image {
   width: 100%;
+  /* Square covers: keep them within the viewport height so the artwork
+     dominates without forcing a scroll just to see it whole. */
+  max-width: calc(100dvh - 150px);
+  margin-inline: auto;
   display: block;
   border: 1px solid var(--border);
   box-shadow: 0 32px 90px rgba(0, 0, 0, 0.7);
