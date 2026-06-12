@@ -1112,10 +1112,18 @@ html, body {
   position: fixed;
   inset: 0;
   z-index: 500;
-  background: rgba(0, 0, 0, 0.96);
-  backdrop-filter: blur(12px);
+  /* Opaque: a translucent background + backdrop-filter lets the grid behind
+     flash through while compositing during scroll. */
+  background: #000;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 56px 28px 48px;
+}
+
+/* Freeze the page behind the overlay so scroll can't chain into the grid. */
+body.overlay-open {
+  overflow: hidden;
 }
 
 .record-overlay[hidden] {

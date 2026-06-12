@@ -266,6 +266,7 @@ function openRecordOverlay() {
   }
 
   elements.recordOverlay.hidden = false;
+  document.body.classList.add("overlay-open");
 }
 
 function closeRecordOverlay() {
@@ -274,6 +275,7 @@ function closeRecordOverlay() {
   }
 
   elements.recordOverlay.hidden = true;
+  document.body.classList.remove("overlay-open");
   elements.recordOverlayImage.src = "";
   if (albumPanelHome && elements.albumPanel) {
     albumPanelHome.appendChild(elements.albumPanel);
