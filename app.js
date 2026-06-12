@@ -73,10 +73,13 @@ const elements = {
   viewIconFlow: document.querySelector("#view-icon-flow"),
   viewInFlow: document.querySelector("#view-in-flow"),
   transport: document.querySelector(".transport"),
-  lightbox: document.querySelector("#cover-lightbox"),
-  lightboxImage: document.querySelector("#cover-lightbox-image"),
-  lightboxCaption: document.querySelector("#cover-lightbox-caption"),
-  lightboxClose: document.querySelector("#cover-lightbox-close"),
+  appShell: document.querySelector(".app-shell"),
+  albumPanel: document.querySelector(".album-panel"),
+  recordOverlay: document.querySelector("#record-overlay"),
+  recordOverlayImage: document.querySelector("#record-overlay-image"),
+  recordOverlayCaption: document.querySelector("#record-overlay-caption"),
+  recordOverlayInfo: document.querySelector("#record-overlay-info"),
+  recordOverlayClose: document.querySelector("#record-overlay-close"),
   sceneEmpty: document.querySelector("#scene-empty"),
   prevButton: document.querySelector("#prev-button"),
   nextButton: document.querySelector("#next-button"),
@@ -123,7 +126,6 @@ async function init() {
   syncViewMode();
   applyFilters({ autoResetIfEmpty: true });
   initTuningPanel();
-  document.dispatchEvent(new CustomEvent("collection:ready"));
 }
 
 function bindEvents() {
@@ -132,6 +134,7 @@ function bindEvents() {
   });
 
   elements.viewInFlow?.addEventListener("click", () => {
+    closeRecordOverlay();
     setViewMode("flow");
   });
 
@@ -143,16 +146,18 @@ function bindEvents() {
     const targetIndex = Number(cell.dataset.index || "-1");
     if (targetIndex >= 0 && !Number.isNaN(targetIndex)) {
       setActiveIndex(targetIndex);
-      openLightbox(state.filteredRecords[targetIndex]);
+      openRecordOverlay();
     }
   });
 
-  elements.lightbox?.addEventListener("click", () => {
-    closeLightbox();
+  elements.recordOverlay?.addEventListener("click", (event) => {
+    if (event.target === elements.recordOverlay) {
+      closeRecordOverlay();
+    }
   });
 
-  elements.lightboxClose?.addEventListener("click", () => {
-    closeLightbox();
+  elements.recordOverlayClose?.addEventListener("click", () => {
+    closeRecordOverlay();
   });
 
   elements.searchToggle?.addEventListener("click", () => {
@@ -194,8 +199,8 @@ function bindEvents() {
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && !elements.lightbox?.hidden) {
-      closeLightbox();
+    if (event.key === "Escape" && !elements.recordOverlay?.hidden) {
+      closeRecordOverlay();
       return;
     }
 
@@ -240,29 +245,39 @@ function closeSearchOverlay() {
   elements.searchOverlay.hidden = true;
 }
 
-function openLightbox(record) {
-  if (!elements.lightbox || !record) {
+let albumPanelHome = null;
+
+function openRecordOverlay() {
+  const record = state.filteredRecords[state.activeIndex];
+  if (!elements.recordOverlay || !record) {
     return;
   }
 
   const coverUrl = resolveCoverUrl(record.coverUrl || record.thumbUrl || "", record, "cover");
-  if (!coverUrl || failedCoverUrls.has(coverUrl)) {
-    return;
+  elements.recordOverlayImage.src = coverUrl || "";
+  elements.recordOverlayImage.alt = `${record.artist} — ${record.title}`;
+  elements.recordOverlayCaption.textContent = `${record.artist} — ${record.title}`;
+
+  // The album panel itself moves into the overlay, so all of its rendering
+  // (summary, links, tracklist, player) keeps working untouched.
+  if (elements.albumPanel && elements.albumPanel.parentElement !== elements.recordOverlayInfo) {
+    albumPanelHome = albumPanelHome || elements.albumPanel.parentElement;
+    elements.recordOverlayInfo.appendChild(elements.albumPanel);
   }
 
-  elements.lightboxImage.src = coverUrl;
-  elements.lightboxImage.alt = `${record.artist} — ${record.title}`;
-  elements.lightboxCaption.textContent = `${record.artist} — ${record.title}`;
-  elements.lightbox.hidden = false;
+  elements.recordOverlay.hidden = false;
 }
 
-function closeLightbox() {
-  if (!elements.lightbox) {
+function closeRecordOverlay() {
+  if (!elements.recordOverlay || elements.recordOverlay.hidden) {
     return;
   }
 
-  elements.lightbox.hidden = true;
-  elements.lightboxImage.src = "";
+  elements.recordOverlay.hidden = true;
+  elements.recordOverlayImage.src = "";
+  if (albumPanelHome && elements.albumPanel) {
+    albumPanelHome.appendChild(elements.albumPanel);
+  }
 }
 
 function handleViewportResize() {
@@ -488,6 +503,10 @@ function syncViewMode() {
     elements.viewInFlow.hidden = !isGrid;
   }
   elements.galleryStage.classList.toggle("gallery-stage--grid", isGrid);
+  elements.appShell?.classList.toggle("view-grid", isGrid);
+  if (!isGrid) {
+    closeRecordOverlay();
+  }
 }
 
 function renderStage() {
@@ -683,11 +702,6 @@ function createCoverCard() {
 
     const targetIndex = Number(card.dataset.index || "-1");
     if (targetIndex < 0 || Number.isNaN(targetIndex)) {
-      return;
-    }
-
-    if (targetIndex === state.activeIndex) {
-      openLightbox(state.filteredRecords[targetIndex]);
       return;
     }
 

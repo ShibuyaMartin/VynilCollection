@@ -15,15 +15,10 @@
       href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
     >
     <link rel="stylesheet" href="./styles.css?v=1775314412">
-    <script type="module" src="./splash.js?v=1781168000"></script>
-    <script type="module" src="./app.js?v=1781168000"></script>
+    <script type="module" src="./app.js?v=1781175000"></script>
     <meta property="og:title" content="Vinilos Shibu">
   </head>
   <body>
-    <div class="splash" id="splash">
-      <canvas id="splash-canvas"></canvas>
-    </div>
-
     <div class="app-shell">
       <section class="control-strip" aria-label="Collection controls">
         <button class="search-toggle" id="search-toggle" type="button" aria-label="Search">
@@ -125,10 +120,15 @@
         </section>
       </main>
 
-      <div class="cover-lightbox" id="cover-lightbox" hidden>
-        <button class="cover-lightbox__close" id="cover-lightbox-close" type="button" aria-label="Close">&#10005;</button>
-        <img class="cover-lightbox__image" id="cover-lightbox-image" alt="">
-        <p class="cover-lightbox__caption" id="cover-lightbox-caption"></p>
+      <div class="record-overlay" id="record-overlay" hidden>
+        <button class="record-overlay__close" id="record-overlay-close" type="button" aria-label="Close">&#10005;</button>
+        <div class="record-overlay__inner">
+          <figure class="record-overlay__media">
+            <img class="record-overlay__image" id="record-overlay-image" alt="">
+            <figcaption class="record-overlay__caption" id="record-overlay-caption"></figcaption>
+          </figure>
+          <div class="record-overlay__info" id="record-overlay-info"></div>
+        </div>
       </div>
 
       <details class="tuning-panel" id="tuning-panel" hidden>
