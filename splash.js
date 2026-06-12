@@ -159,64 +159,58 @@ function createProgram(gl) {
       );
     }
 
-    float fbm(vec2 p) {
-      float v = 0.0;
-      v += 0.5 * noise(p);
-      v += 0.25 * noise(p * 2.1 + 13.0);
-      v += 0.125 * noise(p * 4.3 + 29.0);
-      return v;
-    }
-
     void main() {
+      // y grows downward, matching the text canvas.
       vec2 uv = vec2(v_uv.x, 1.0 - v_uv.y);
-      float aspect = u_res.x / u_res.y;
 
-      // Ink: vertical bleed driven by noise, plus a soft multi-tap blur.
-      float drip = fbm(vec2(uv.x * 9.0 * aspect, u_time * 0.45));
-      vec2 dripUv = uv - vec2(0.0, drip * drip * 0.09);
+      // Quantize x into thin vertical "candle" columns.
+      float cell = max(3.0, u_res.x / 320.0);
+      float colIndex = floor(gl_FragCoord.x / cell);
+      float xq = (colIndex + 0.5) * cell / u_res.x;
+      float colRand = hash(vec2(colIndex, 7.3));
 
-      float ink = 0.0;
-      float total = 0.0;
-      for (int s = -6; s <= 6; s++) {
-        float fs = float(s);
-        float w = 1.0 - abs(fs) / 7.0;
-        vec2 offset = vec2(0.0, fs * 0.0022 * (0.4 + drip));
-        ink += texture2D(u_text, dripUv + offset).r * w;
-        total += w;
+      // Per-column streak length, growing with the reveal and flickering.
+      float flicker = 0.85 + 0.3 * noise(vec2(colIndex * 0.7, u_time * 1.6));
+      float reveal = smoothstep(0.0, 0.85, u_progress);
+      float maxLen = (0.12 + 0.75 * colRand) * 0.55 * reveal * flicker;
+
+      // Streak: brightest sample of the text BELOW this pixel, decaying with
+      // distance, so trails rise upward from the letters.
+      float trail = 0.0;
+      for (int i = 1; i <= 44; i++) {
+        float fi = float(i) / 44.0;
+        float d = fi * fi * maxLen;
+        float a = texture2D(u_text, vec2(xq, uv.y + d)).r;
+        trail = max(trail, a * (1.0 - fi * fi));
       }
-      ink /= total;
-      float crisp = texture2D(u_text, dripUv).r;
-      ink = max(ink * 1.35, crisp);
 
-      // Reveal: ink soaks in over u_progress, gated by noise.
-      float gate = fbm(uv * 5.0 + 3.7);
-      ink *= smoothstep(gate - 0.35, gate + 0.05, u_progress * 1.3);
+      // Grainy texture inside the streaks.
+      float inner = 0.4 + 0.6 * noise(vec2(colIndex * 3.1, uv.y * 70.0 + colRand * 31.0));
+      trail *= inner;
 
-      // Gradient colorization: edge -> mid -> core.
-      vec3 edgeColor = vec3(0.443, 0.573, 0.945);  /* #7192F1 */
-      vec3 midColor = vec3(0.624);                 /* #9F9F9F */
-      vec3 coreColor = vec3(1.0, 0.992, 0.910);    /* #fffde8 */
-      vec3 inkColor = mix(edgeColor, midColor, smoothstep(0.08, 0.45, ink));
-      inkColor = mix(inkColor, coreColor, smoothstep(0.45, 0.85, ink));
+      // Thin line/gap mask within each column.
+      float f = fract(gl_FragCoord.x / cell);
+      float stripe = smoothstep(0.04, 0.32, f) * (1.0 - smoothstep(0.68, 0.96, f));
 
-      // Neon background glow, warped by noise (very low opacity).
-      vec2 p = (uv - 0.5) * vec2(aspect, 1.0);
-      float warp = fbm(p * 3.0 + u_time * 0.25);
-      float blobPink = exp(-3.5 * length(p - vec2(-0.62, -0.32) + warp * 0.22));
-      float blobTeal = exp(-3.5 * length(p - vec2(0.66, 0.26) - warp * 0.18));
-      float blobRed = exp(-4.0 * length(p - vec2(-0.2, 0.42) + warp * 0.15));
-      vec3 bg = vec3(1.0, 0.745, 0.745) * blobPink * 0.10
-              + vec3(0.0, 0.533, 0.667) * blobTeal * 0.10
-              + vec3(0.722, 0.0, 0.314) * blobRed * 0.08;
+      // Crisp letter bodies (striped like everything else).
+      float crisp = texture2D(u_text, vec2(xq, uv.y)).r * smoothstep(0.05, 0.45, u_progress);
 
-      // Bloom-ish lift on bright ink + film grain.
-      float bloom = smoothstep(0.6, 1.0, ink) * 0.35;
-      float grain = (hash(uv * u_res + u_time * 60.0) - 0.5) * 0.05;
+      // Soft unstriped bloom around the letters.
+      float glow = 0.0;
+      glow += texture2D(u_text, uv + vec2(0.0, 0.006)).r;
+      glow += texture2D(u_text, uv - vec2(0.0, 0.006)).r;
+      glow += texture2D(u_text, uv + vec2(0.005, 0.0)).r;
+      glow += texture2D(u_text, uv - vec2(0.005, 0.0)).r;
+      glow = (glow / 4.0) * smoothstep(0.05, 0.5, u_progress);
 
-      vec3 color = bg + inkColor * ink + coreColor * bloom + grain;
+      vec3 cream = vec3(1.0, 0.992, 0.910);   /* #fffde8 */
+      vec3 blue = vec3(0.443, 0.573, 0.945);  /* #7192F1 */
 
-      // Vignette.
-      color *= 1.0 - 0.55 * dot(p, p);
+      vec3 trailColor = mix(blue * 0.5, cream, smoothstep(0.45, 0.95, trail));
+      vec3 color = trailColor * trail * stripe;
+      color += cream * crisp * stripe * 1.7;
+      color += cream * glow * glow * 0.85;
+      color += (hash(uv * u_res + u_time * 60.0) - 0.5) * 0.035;
 
       gl_FragColor = vec4(color, 1.0);
     }
