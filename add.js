@@ -1,8 +1,11 @@
-const ADMIN_TOKEN_STORAGE_KEY = "vinilos-admin-token";
+import { supabase } from "/js/supabase-client.js";
+import { requireSession, getOwnProfile } from "/js/auth.js";
+
 const BARCODE_FORMATS = ["ean_13", "ean_8", "upc_a", "upc_e"];
 const ZXING_FORMATS = ["EAN-13", "EAN-8", "UPC-A", "UPC-E"];
 
-const APP_BASE_PATH = resolveAppBasePath();
+let session = null;
+let ownProfile = null;
 
 const steps = {
   scan: document.getElementById("step-scan"),
@@ -24,10 +27,21 @@ const candidateList = document.getElementById("candidate-list");
 const confirmCard = document.getElementById("confirm-card");
 const confirmError = document.getElementById("confirm-error");
 const confirmAddButton = document.getElementById("confirm-add");
-const adminTokenRow = document.getElementById("admin-token-row");
-const adminTokenInput = document.getElementById("admin-token-input");
+const backLink = document.getElementById("back-link");
 
-document.getElementById("back-link").href = APP_BASE_PATH || "/";
+// Auth gate: redirects to /login when there is no session.
+(async () => {
+  session = await requireSession("/add");
+  if (!session) {
+    return;
+  }
+  ownProfile = await getOwnProfile();
+  if (!ownProfile) {
+    window.location.replace("/login?next=/add");
+    return;
+  }
+  backLink.href = `/u/${ownProfile.username}`;
+})();
 
 let mediaStream = null;
 let scanLoopActive = false;
@@ -232,7 +246,6 @@ function renderRetry(message) {
 async function loadRelease(releaseId) {
   confirmError.textContent = "";
   confirmCard.innerHTML = '<div class="spinner"></div>';
-  adminTokenRow.hidden = Boolean(localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY));
   showStep("confirm");
 
   try {
@@ -290,24 +303,22 @@ async function addSelectedRelease() {
   if (!selectedRelease) return;
   confirmError.textContent = "";
 
-  const storedToken = localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY) || "";
-  const adminToken = storedToken || adminTokenInput.value.trim();
-  if (!adminToken) {
-    adminTokenRow.hidden = false;
-    confirmError.textContent = "Paste the admin token to add records.";
-    adminTokenInput.focus();
+  const { data } = await supabase.auth.getSession();
+  const accessToken = data.session?.access_token;
+  if (!accessToken) {
+    window.location.replace("/login?next=/add");
     return;
   }
 
   confirmAddButton.disabled = true;
-  confirmAddButton.textContent = "Adding…";
+  confirmAddButton.textContent = "Adding\u2026";
 
   try {
-    const response = await fetch(apiUrl("/api/add"), {
+    const response = await fetch("/api/records", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${adminToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         releaseId: selectedRelease.releaseId,
@@ -317,22 +328,23 @@ async function addSelectedRelease() {
         comment: document.getElementById("comment-input").value.trim() || undefined,
       }),
     });
-    const data = await response.json();
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch {
+      throw new Error(`The server responded ${response.status}. Is the API deployed?`);
+    }
 
     if (response.status === 401) {
-      localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
-      adminTokenRow.hidden = false;
-      adminTokenInput.value = "";
-      throw new Error("Invalid token. Paste it again and retry.");
+      window.location.replace("/login?next=/add");
+      return;
     }
-    if (response.status === 409 && data.error === "duplicate") {
-      throw new Error(data.message);
+    if (response.status === 409 && payload.error === "duplicate") {
+      throw new Error(payload.message);
     }
-    if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
+    if (!response.ok) throw new Error(payload.error || `Error ${response.status}`);
 
-    localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, adminToken);
-    adminTokenInput.value = "";
-    renderSuccess(data);
+    renderSuccess(payload);
     showStep("done");
   } catch (error) {
     confirmError.textContent = error.message;
@@ -342,7 +354,7 @@ async function addSelectedRelease() {
   }
 }
 
-function renderSuccess(data) {
+function renderSuccess(payload) {
   const card = document.getElementById("success-card");
   card.innerHTML = "";
 
@@ -351,26 +363,20 @@ function renderSuccess(data) {
   badge.textContent = "Added";
 
   const heading = document.createElement("h2");
-  heading.textContent = `#${data.record.number} — ${data.record.artist} — ${data.record.title}`;
+  heading.textContent = `#${payload.record.position} \u2014 ${payload.record.artist} \u2014 ${payload.record.title}`;
 
   const note = document.createElement("p");
-  note.textContent = data.note || "Added to the collection.";
+  note.textContent = "It is already live in your collection.";
 
   const link = document.createElement("a");
-  link.href = APP_BASE_PATH || "/";
-  link.textContent = "View collection →";
+  link.href = payload.collection || (ownProfile ? `/u/${ownProfile.username}` : "/");
+  link.textContent = "View collection \u2192";
 
   card.append(badge, heading, note, link);
 }
 
 // --- Helpers ----------------------------------------------------------------
 
-function resolveAppBasePath() {
-  const path = window.location.pathname || "/";
-  return path === "/vinilos" || path.startsWith("/vinilos/") ? "/vinilos" : "";
-}
-
-// API routes live at the domain root regardless of the /vinilos rewrite.
 function apiUrl(path) {
   return path;
 }

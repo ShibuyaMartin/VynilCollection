@@ -1,6 +1,12 @@
+import { supabase, coverPublicUrl } from "/js/supabase-client.js";
+
 const VIEW_MODE_STORAGE_KEY = "vinilos-view-mode";
 
+// /u/<username> — which collection this page shows.
+const COLLECTION_USER = (window.location.pathname.match(/^\/u\/([a-z0-9-]+)/) || [])[1] || null;
+
 const state = {
+  owner: null,
   records: [],
   filteredRecords: [],
   activeIndex: 0,
@@ -21,7 +27,6 @@ const interaction = {
   suppressClickUntil: 0,
 };
 
-const DATA_VERSION = "1781021000";
 const APP_BASE_PATH = resolveAppBasePath();
 const SCENE_TUNING_STORAGE_KEY = "vinilos-scene-tuning";
 const LEGACY_SCENE_TUNING_STORAGE_KEY = "vinilos-reflection-tuning";
@@ -106,19 +111,48 @@ const elements = {
 init().catch((error) => {
   console.error(error);
   elements.sceneEmpty.hidden = false;
-  elements.sceneEmpty.querySelector(".scene-empty__title").textContent = "Collection data missing";
+  elements.sceneEmpty.querySelector(".scene-empty__title").textContent = "Collection not found";
   elements.sceneEmpty.querySelector(".scene-empty__copy").textContent =
-    "Run the importer script from the README so the app can load your spreadsheet.";
+    error?.code === "collection-not-found"
+      ? `There is no collection at /u/${COLLECTION_USER}.`
+      : "Something went wrong loading this collection. Try reloading.";
 });
 
 async function init() {
-  const response = await fetch(appUrl(`/data/collection.json?v=${DATA_VERSION}`));
-  if (!response.ok) {
-    throw new Error(`Failed to load collection.json (${response.status})`);
+  if (!COLLECTION_USER) {
+    window.location.replace("/u/shibu");
+    return;
   }
 
-  const payload = await response.json();
-  state.records = dedupeRecords(payload.records ?? []);
+  const { data: owner, error: ownerError } = await supabase
+    .from("profiles")
+    .select("id, username, display_name, bio")
+    .eq("username", COLLECTION_USER)
+    .maybeSingle();
+
+  if (ownerError) {
+    throw ownerError;
+  }
+  if (!owner) {
+    const notFound = new Error("collection not found");
+    notFound.code = "collection-not-found";
+    throw notFound;
+  }
+
+  const { data: rows, error: recordsError } = await supabase
+    .from("records")
+    .select("*")
+    .eq("owner_id", owner.id)
+    .order("position", { ascending: true })
+    .limit(1000);
+
+  if (recordsError) {
+    throw recordsError;
+  }
+
+  state.owner = owner;
+  state.records = dedupeRecords((rows || []).map(rowToLegacyRecord));
+  document.title = `${owner.display_name || owner.username} — Vinilos`;
 
   buildFilters();
   bindEvents();
@@ -126,6 +160,35 @@ async function init() {
   syncViewMode();
   applyFilters({ autoResetIfEmpty: true });
   initTuningPanel();
+}
+
+// Maps a Supabase row to the legacy record shape the rest of the UI expects.
+function rowToLegacyRecord(row) {
+  return {
+    number: String(row.position),
+    artist: row.artist,
+    title: row.title,
+    year: row.year ? String(row.year) : "",
+    genre: (row.genres || []).join(" / "),
+    label: row.label || "",
+    catalogNumber: row.catalog_number || "",
+    country: row.country || "",
+    coverCondition: row.cover_condition || "",
+    discCondition: row.disc_condition || "",
+    id: row.id,
+    genreGroups: row.genres || [],
+    yearSort: row.year || null,
+    searchText: row.search_text || "",
+    coverUrl: coverPublicUrl(row.cover_path),
+    thumbUrl: coverPublicUrl(row.cover_path),
+    discogsUrl: row.discogs_url || "",
+    discogsCanonicalUrl: row.discogs_url || "",
+    discogsGenres: row.genres || [],
+    discogsStyles: row.styles || [],
+    discogsReleaseId: row.discogs_release_id || "",
+    tracklist: row.tracklist || [],
+    comment: row.comment || undefined,
+  };
 }
 
 function bindEvents() {
@@ -846,7 +909,8 @@ function renderAlbumPanel() {
     return;
   }
 
-  elements.albumNumber.textContent = `Record ${record.number} / ${state.filteredRecords.length}`;
+  const ownerName = state.owner ? (state.owner.display_name || state.owner.username) : "";
+  elements.albumNumber.textContent = `${ownerName ? `${ownerName} \u00b7 ` : ""}Record ${record.number} / ${state.filteredRecords.length}`;
   elements.albumTitle.textContent = record.title;
   elements.albumArtist.textContent = record.artist;
   elements.albumMeta.textContent = buildMetaLine(record);
@@ -978,81 +1042,20 @@ function discogsAbsoluteUrl(value) {
   return `https://www.discogs.com${value}`;
 }
 
-function resolveCoverUrl(value, record = null, variant = "cover") {
+function resolveCoverUrl(value) {
   const url = String(value || "").trim();
-  if (!url) {
+  if (!url || !/^https?:\/\//.test(url)) {
     return "";
   }
-
-  if (url.startsWith("/vinilos/")) {
-    return withCacheVersion(normalizeLegacyVinilosPath(url), record, variant);
-  }
-
-  // Local previews proxy remote images through the preview server so
-  // Discogs/Juno/shibu covers stay visible even when those origins block
-  // direct browser requests.
-  if (isLocalPreviewHost()) {
-    if (url.startsWith("http://") || url.startsWith("https://")) {
-      const resolvedUrl = shouldProxyCoverUrl(url) ? localPreviewProxyUrl(url) : url;
-      return withCacheVersion(resolvedUrl, record, variant);
-    }
-  }
-
   return url;
 }
 
-function localPreviewProxyUrl(url) {
-  return appUrl(`/cover-proxy?url=${encodeURIComponent(url)}`);
-}
-
 function resolveAppBasePath() {
-  const path = window.location.pathname || "/";
-  return path === "/vinilos" || path.startsWith("/vinilos/") ? "/vinilos" : "";
+  return "";
 }
 
 function appUrl(path) {
-  if (!path) {
-    return APP_BASE_PATH || "";
-  }
-
-  if (/^https?:\/\//.test(path)) {
-    return path;
-  }
-
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  return `${APP_BASE_PATH}${normalized}`;
-}
-
-function normalizeLegacyVinilosPath(path) {
-  return appUrl(path.slice("/vinilos".length));
-}
-
-function shouldProxyCoverUrl(url) {
-  try {
-    const parsed = new URL(url);
-    return parsed.hostname.endsWith("discogs.com");
-  } catch {
-    return false;
-  }
-}
-
-function withCacheVersion(url, record, variant) {
-  if (!record) {
-    return url;
-  }
-
-  const separator = url.includes("?") ? "&" : "?";
-  const version = [
-    DATA_VERSION,
-    record.number || "",
-    record.discogsReleaseId || "",
-    record.discogsCanonicalUrl || record.discogsUrl || "",
-    variant,
-  ]
-    .filter(Boolean)
-    .join(":");
-
-  return `${url}${separator}v=${encodeURIComponent(version)}`;
+  return path || "";
 }
 
 function isLocalPreviewHost() {
