@@ -149,13 +149,33 @@
       }
 
       .place-thumb {
+        position: relative;
         width: 56px;
         height: 56px;
         flex: none;
-        object-fit: cover;
+        overflow: hidden;
         background: rgba(255, 255, 255, 0.05);
         border: 1px solid var(--border);
-        filter: grayscale(0.4) contrast(1.05);
+      }
+
+      .place-thumb__tile {
+        position: absolute;
+        width: 256px;
+        height: 256px;
+        max-width: none;
+        filter: grayscale(0.5) contrast(1.05) brightness(0.92);
+      }
+
+      .place-thumb__pin {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 7px;
+        height: 7px;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        background: var(--text);
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.6);
       }
 
       .place-text {
@@ -365,6 +385,6 @@
       <p class="note" id="add-signin" hidden><a href="/login?next=/places">Sign in</a> to add places and rate them.</p>
     </div>
 
-    <script type="module" src="/js/places.js?v=2"></script>
+    <script type="module" src="/js/places.js?v=4"></script>
   </body>
 </html>

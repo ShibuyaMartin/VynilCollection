@@ -137,9 +137,29 @@ function keyOf(place) {
   return place.placeId || place.osmId;
 }
 
-// Free static map tile from Wikimedia, centered on the place (no API key).
-function mapThumbUrl(lat, lng) {
-  return `https://maps.wikimedia.org/img/osm-intl,15,${lat},${lng},96x96@2x.png`;
+// A 56px map crop centered on the place, from a single OpenStreetMap tile
+// (free, browser-embeddable — unlike Wikimedia maps, which blocks hotlinking).
+// Returns the tile URL plus the pixel offset that centers the point, clamped
+// so the tile always covers the window (no gaps near tile edges).
+const THUMB_ZOOM = 15;
+const TILE_PX = 256;
+const THUMB_PX = 56;
+
+function mapTile(lat, lng) {
+  const n = 2 ** THUMB_ZOOM;
+  const latRad = (lat * Math.PI) / 180;
+  const fx = ((lng + 180) / 360) * n;
+  const fy = ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n;
+  const xtile = Math.floor(fx);
+  const ytile = Math.floor(fy);
+  const px = (fx - xtile) * TILE_PX;
+  const py = (fy - ytile) * TILE_PX;
+  const clamp = (v) => Math.max(THUMB_PX - TILE_PX, Math.min(0, v));
+  return {
+    url: `https://tile.openstreetmap.org/${THUMB_ZOOM}/${xtile}/${ytile}.png`,
+    offsetX: clamp(THUMB_PX / 2 - px),
+    offsetY: clamp(THUMB_PX / 2 - py),
+  };
 }
 
 function renderList() {
@@ -151,11 +171,18 @@ function renderList() {
       const head = document.createElement("div");
       head.className = "place-head";
 
-      const thumb = document.createElement("img");
+      const thumb = document.createElement("div");
       thumb.className = "place-thumb";
-      thumb.src = mapThumbUrl(place.lat, place.lng);
-      thumb.alt = "";
-      thumb.loading = "lazy";
+      const tile = mapTile(place.lat, place.lng);
+      const tileImg = document.createElement("img");
+      tileImg.className = "place-thumb__tile";
+      tileImg.src = tile.url;
+      tileImg.alt = "";
+      tileImg.style.left = `${tile.offsetX}px`;
+      tileImg.style.top = `${tile.offsetY}px`;
+      const pin = document.createElement("span");
+      pin.className = "place-thumb__pin";
+      thumb.append(tileImg, pin);
 
       const text = document.createElement("div");
       text.className = "place-text";
