@@ -14,7 +14,7 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
     >
-    <link rel="stylesheet" href="/styles.css?v=1781229000">
+    <link rel="stylesheet" href="/styles.css?v=1781230000">
     <script type="module" src="/app.js?v=1781227000"></script>
     <meta property="og:title" content="Deadwax">
   </head>
@@ -24,7 +24,6 @@
         <img src="/deadwax.svg" alt="Deadwax">
       </a>
       <section class="control-strip" aria-label="Collection controls">
-        <button class="follow-button" id="follow-button" type="button" hidden>Follow</button>
         <a class="search-toggle" id="stats-link" href="#" aria-label="Stats" hidden>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="13.5" x2="3" y2="9"/><line x1="8" y1="13.5" x2="8" y2="2.5"/><line x1="13" y1="13.5" x2="13" y2="6"/></svg>
         </a>
@@ -92,7 +91,10 @@
 
         <section class="album-panel" aria-live="polite">
           <div class="album-summary">
-            <p class="album-summary__kicker" id="album-number">Record -</p>
+            <div class="album-summary__head">
+              <p class="album-summary__kicker" id="album-number">Record -</p>
+              <button class="follow-button" id="follow-button" type="button" hidden>Follow</button>
+            </div>
             <button class="view-in-flow" id="view-in-flow" type="button" hidden>View in flow &rarr;</button>
             <h1 class="album-summary__title" id="album-title">Pick a record</h1>
             <p class="album-summary__artist" id="album-artist">Artist details will appear here.</p>

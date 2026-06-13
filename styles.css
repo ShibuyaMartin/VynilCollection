@@ -656,13 +656,26 @@ body::before {
   border-left: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.album-summary__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 10px;
+}
+
 .album-summary__kicker {
-  margin: 0 0 0.5rem;
+  margin: 0;
   color: var(--text-dim);
   font-size: 0.72rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   font-family: var(--font-sans);
+}
+
+.album-summary__head .follow-button {
+  flex: none;
+  padding: 5px 12px;
 }
 
 .album-summary__title {
@@ -933,13 +946,6 @@ body.chrome-hidden .control-strip {
   pointer-events: none;
 }
 
-/* On narrow screens the strip can't share a row with the logo once the
-   follow pill is in it: icons stay on the first row, FOLLOW drops to a
-   second right-aligned row. */
-@media (max-width: 720px) {
-  .control-strip { max-width: 252px; flex-wrap: wrap; row-gap: 8px!important; }
-  .control-strip .follow-button { order: 2; padding: 7px 12px; }
-}
 .search-toggle { background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center; }
 .search-overlay { position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(0,0,0,0.92);backdrop-filter:blur(16px);padding:12px 16px;display:flex;align-items:center;gap:12px; }
 .search-overlay input { flex:1;background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.2);color:#fff;font-family:var(--font-sans);font-size:1rem;padding:8px 0;outline:none; }
