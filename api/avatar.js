@@ -42,9 +42,12 @@ export default async function handler(req, res) {
     const ext = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
     const avatarPath = `${user.id}/${Date.now()}.${ext}`;
 
-    const uploaded = await uploadAvatar(avatarPath, buffer, contentType);
-    if (!uploaded) {
-      throw new Error("Upload failed");
+    const upload = await uploadAvatar(avatarPath, buffer, contentType);
+    if (!upload.ok) {
+      if (upload.status === 400 || upload.status === 404) {
+        throw new Error('Storage bucket "avatars" is missing — create a public bucket named avatars in Supabase → Storage');
+      }
+      throw new Error(`Storage upload failed (${upload.status}): ${upload.body}`);
     }
 
     // Remove the previous avatar so the bucket doesn't accumulate orphans.
@@ -114,7 +117,8 @@ async function uploadAvatar(path, buffer, contentType) {
     },
     body: buffer,
   });
-  return response.ok;
+  const body = response.ok ? "" : (await response.text().catch(() => "")).slice(0, 150);
+  return { ok: response.ok, status: response.status, body };
 }
 
 async function deleteAvatar(path) {
