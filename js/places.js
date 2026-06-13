@@ -137,6 +137,11 @@ function keyOf(place) {
   return place.placeId || place.osmId;
 }
 
+// Free static map tile from Wikimedia, centered on the place (no API key).
+function mapThumbUrl(lat, lng) {
+  return `https://maps.wikimedia.org/img/osm-intl,15,${lat},${lng},96x96@2x.png`;
+}
+
 function renderList() {
   els.list.replaceChildren(
     ...places.map((place) => {
@@ -146,12 +151,23 @@ function renderList() {
       const head = document.createElement("div");
       head.className = "place-head";
 
+      const thumb = document.createElement("img");
+      thumb.className = "place-thumb";
+      thumb.src = mapThumbUrl(place.lat, place.lng);
+      thumb.alt = "";
+      thumb.loading = "lazy";
+
+      const text = document.createElement("div");
+      text.className = "place-text";
+
+      const topRow = document.createElement("div");
+      topRow.className = "place-toprow";
       const name = document.createElement("h2");
       name.textContent = place.name;
-
       const distance = document.createElement("span");
       distance.className = "distance";
       distance.textContent = `${place.distanceKm} km`;
+      topRow.append(name, distance);
 
       const meta = document.createElement("p");
       meta.className = "meta";
@@ -173,7 +189,8 @@ function renderList() {
         meta.append(address);
       }
 
-      head.append(name, distance, meta);
+      text.append(topRow, meta);
+      head.append(thumb, text);
       card.append(head);
 
       if (expandedKey === keyOf(place)) {
@@ -196,12 +213,25 @@ function renderBody(place, reviews) {
 
   const links = document.createElement("div");
   links.className = "place-links";
+
+  // Search by name + coords so Maps resolves to the actual business listing
+  // (with its hours, photos and reviews), not a bare dropped pin.
+  const onMap = document.createElement("a");
+  onMap.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    `${place.name} ${place.lat},${place.lng}`
+  )}`;
+  onMap.target = "_blank";
+  onMap.rel = "noreferrer";
+  onMap.textContent = "Open in Maps";
+  links.append(onMap);
+
   const directions = document.createElement("a");
   directions.href = `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}`;
   directions.target = "_blank";
   directions.rel = "noreferrer";
   directions.textContent = "Directions";
   links.append(directions);
+
   if (place.website) {
     const site = document.createElement("a");
     site.href = place.website.startsWith("http") ? place.website : `https://${place.website}`;

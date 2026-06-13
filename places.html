@@ -141,18 +141,47 @@
       }
 
       .place-head {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 4px 14px;
-        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px;
         cursor: pointer;
+      }
+
+      .place-thumb {
+        width: 56px;
+        height: 56px;
+        flex: none;
+        object-fit: cover;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        filter: grayscale(0.4) contrast(1.05);
+      }
+
+      .place-text {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .place-toprow {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
       }
 
       .place-head h2 {
         margin: 0;
         font-size: 0.9375rem;
         font-weight: 600;
-        line-height: 1.35;
+        line-height: 1.3;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .place-head .distance {
@@ -161,10 +190,10 @@
         color: var(--text-dim);
         text-align: right;
         white-space: nowrap;
+        flex: none;
       }
 
       .place-head .meta {
-        grid-column: 1 / -1;
         font-family: var(--font-mono);
         font-size: 0.625rem;
         letter-spacing: 0.05em;
@@ -336,6 +365,6 @@
       <p class="note" id="add-signin" hidden><a href="/login?next=/places">Sign in</a> to add places and rate them.</p>
     </div>
 
-    <script type="module" src="/js/places.js?v=1"></script>
+    <script type="module" src="/js/places.js?v=2"></script>
   </body>
 </html>

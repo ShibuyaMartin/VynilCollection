@@ -14,8 +14,8 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
     >
-    <link rel="stylesheet" href="/styles.css?v=1781231000">
-    <script type="module" src="/app.js?v=1781227000"></script>
+    <link rel="stylesheet" href="/styles.css?v=1781232000">
+    <script type="module" src="/app.js?v=1781232000"></script>
     <meta property="og:title" content="Deadwax">
   </head>
   <body>
@@ -120,10 +120,12 @@
             </div>
 
             <div class="owner-edit-panel" id="owner-edit-panel" hidden>
-              <div class="owner-replace">
-                <input id="owner-replace-input" name="discogs-release" placeholder="Discogs release URL or ID" autocomplete="off">
-                <button id="owner-replace-button" type="button">Replace edition</button>
-              </div>
+              <p class="owner-edit-label">Replace edition</p>
+              <form class="owner-replace" id="owner-replace-form">
+                <input id="owner-replace-input" name="discogs-search" placeholder="Artist, title…" autocomplete="off">
+                <button id="owner-replace-button" type="submit">Search</button>
+              </form>
+              <div class="owner-results" id="owner-results"></div>
               <button class="owner-delete" id="owner-delete" type="button">Delete from collection</button>
               <p class="social-note" id="owner-status"></p>
             </div>

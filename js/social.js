@@ -11,8 +11,10 @@ const els = {
   followButton: document.getElementById("follow-button"),
   ownerEditToggle: document.getElementById("owner-edit-toggle"),
   ownerEditPanel: document.getElementById("owner-edit-panel"),
+  ownerReplaceForm: document.getElementById("owner-replace-form"),
   ownerReplaceInput: document.getElementById("owner-replace-input"),
   ownerReplaceButton: document.getElementById("owner-replace-button"),
+  ownerResults: document.getElementById("owner-results"),
   ownerDelete: document.getElementById("owner-delete"),
   ownerStatus: document.getElementById("owner-status"),
   commentsPanel: document.getElementById("comments-panel"),
@@ -102,8 +104,15 @@ function initOwnerTools() {
   if (!els.ownerEditToggle) return;
 
   els.ownerEditToggle.addEventListener("click", () => {
-    els.ownerEditPanel.hidden = !els.ownerEditPanel.hidden;
+    const opening = els.ownerEditPanel.hidden;
+    els.ownerEditPanel.hidden = !opening;
     els.ownerStatus.textContent = "";
+    // Open pre-loaded with this record's own search, so the right edition
+    // is usually one tap away.
+    if (opening && currentRecord) {
+      els.ownerReplaceInput.value = `${currentRecord.artist} ${currentRecord.title}`.trim();
+      searchEditions();
+    }
   });
 
   els.ownerDelete.addEventListener("click", async () => {
@@ -115,21 +124,80 @@ function initOwnerTools() {
     await ownerRequest("DELETE", { recordId: currentRecordId }, "Deleting…", "Deleted — reloading…");
   });
 
-  els.ownerReplaceButton.addEventListener("click", async () => {
-    if (!currentRecord) return;
-    const raw = els.ownerReplaceInput.value.trim();
-    const releaseId = (raw.match(/release\/(\d+)/) || raw.match(/^(\d+)$/) || [])[1];
-    if (!releaseId) {
-      els.ownerStatus.textContent = "Paste a Discogs release URL or its numeric ID.";
-      return;
-    }
-    await ownerRequest(
+  els.ownerReplaceForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    searchEditions();
+  });
+
+  // Pick an edition from the results → replace in place.
+  els.ownerResults.addEventListener("click", (event) => {
+    const card = event.target.closest("[data-release-id]");
+    if (!card) return;
+    ownerRequest(
       "PATCH",
-      { recordId: currentRecordId, releaseId },
+      { recordId: currentRecordId, releaseId: card.dataset.releaseId },
       "Fetching the new edition from Discogs…",
       "Edition replaced — reloading…"
     );
   });
+}
+
+async function searchEditions() {
+  const query = els.ownerReplaceInput.value.trim();
+  if (!query) return;
+
+  els.ownerStatus.textContent = "";
+  els.ownerResults.innerHTML = '<p class="owner-results__status">Searching Discogs…</p>';
+
+  let candidates = [];
+  try {
+    const response = await fetch(`/api/lookup?q=${encodeURIComponent(query)}`);
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || "Search failed");
+    candidates = payload.candidates || [];
+  } catch (error) {
+    els.ownerResults.innerHTML = "";
+    els.ownerStatus.textContent = error.message || "Search failed";
+    return;
+  }
+
+  if (!candidates.length) {
+    els.ownerResults.innerHTML = '<p class="owner-results__status">No editions found — refine the search.</p>';
+    return;
+  }
+
+  els.ownerResults.replaceChildren(
+    ...candidates.map((candidate) => {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "owner-result";
+      card.dataset.releaseId = candidate.releaseId;
+
+      const thumb = document.createElement("img");
+      thumb.src = candidate.thumb || candidate.coverImage || "";
+      thumb.alt = "";
+      thumb.loading = "lazy";
+
+      const meta = document.createElement("span");
+      meta.className = "owner-result__meta";
+      const title = document.createElement("strong");
+      title.textContent = candidate.title;
+      const sub = document.createElement("span");
+      sub.textContent = [candidate.year, candidate.country, candidate.label, (candidate.formats || []).join(", ")]
+        .filter(Boolean)
+        .join(" · ");
+      meta.append(title, sub);
+
+      card.append(thumb, meta);
+      if (currentRecord && String(candidate.releaseId) === String(currentRecord.discogsReleaseId)) {
+        const tag = document.createElement("span");
+        tag.className = "owner-result__current";
+        tag.textContent = "Current";
+        card.append(tag);
+      }
+      return card;
+    })
+  );
 }
 
 async function ownerRequest(method, body, busyText, doneText) {
@@ -189,6 +257,7 @@ export async function renderSocial(record, ownerId) {
   els.ownerEditPanel.hidden = true;
   els.ownerStatus.textContent = "";
   els.ownerReplaceInput.value = "";
+  els.ownerResults.replaceChildren();
 
   // Reset while loading.
   likeTotal = 0;
