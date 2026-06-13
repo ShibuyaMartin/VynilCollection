@@ -127,7 +127,7 @@ async function init() {
 
   const { data: owner, error: ownerError } = await supabase
     .from("profiles")
-    .select("id, username, display_name, bio")
+    .select("*")
     .eq("username", COLLECTION_USER)
     .maybeSingle();
 
@@ -161,6 +161,8 @@ async function init() {
     statsLink.hidden = false;
   }
 
+  renderOwnerTags(owner);
+
   buildFilters();
   bindEvents();
   syncFiltersFromControls();
@@ -169,6 +171,58 @@ async function init() {
   initTuningPanel();
   await initSocial(state.owner);
   render();
+}
+
+const OWNER_ROLE_LABELS = { collector: "Collector", dj: "DJ", store: "Store" };
+
+function renderOwnerTags(owner) {
+  const container = document.getElementById("owner-tags");
+  if (!container) return;
+  container.replaceChildren();
+
+  for (const role of owner.roles || []) {
+    const tag = document.createElement("span");
+    tag.className = "owner-tag";
+    tag.textContent = OWNER_ROLE_LABELS[role] || role;
+    container.append(tag);
+  }
+  if (owner.city) {
+    const city = document.createElement("span");
+    city.className = "owner-tag owner-tag--soft";
+    city.textContent = owner.city;
+    container.append(city);
+  }
+  if (owner.open_to_offers) {
+    const offers = document.createElement("span");
+    offers.className = "owner-tag";
+    offers.textContent = "Open to offers";
+    container.append(offers);
+  }
+
+  const links = [
+    owner.link_instagram && { label: "Instagram", href: instagramUrl(owner.link_instagram) },
+    owner.link_soundcloud && { label: "SoundCloud", href: withHttp(owner.link_soundcloud) },
+    owner.link_website && { label: "Website", href: withHttp(owner.link_website) },
+  ].filter(Boolean);
+  for (const link of links) {
+    const anchor = document.createElement("a");
+    anchor.className = "owner-link";
+    anchor.href = link.href;
+    anchor.target = "_blank";
+    anchor.rel = "noreferrer";
+    anchor.textContent = link.label;
+    container.append(anchor);
+  }
+
+  container.hidden = container.childElementCount === 0;
+}
+
+function withHttp(url) {
+  return /^https?:\/\//.test(url) ? url : `https://${url}`;
+}
+
+function instagramUrl(value) {
+  return /^https?:\/\//.test(value) ? value : `https://instagram.com/${value.replace(/^@/, "")}`;
 }
 
 // Maps a Supabase row to the legacy record shape the rest of the UI expects.

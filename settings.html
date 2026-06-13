@@ -117,6 +117,50 @@
       .username-row { display: flex; align-items: center; gap: 6px; }
       .username-row .at { color: var(--text-dim); font-size: 1rem; }
 
+      .roles { display: flex; gap: 8px; flex-wrap: wrap; }
+      .role-chip {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        color: var(--text-soft);
+        padding: 9px 16px;
+        cursor: pointer;
+      }
+      .role-chip.is-on {
+        background: var(--text);
+        border-color: var(--text);
+        color: #000;
+      }
+
+      label.field.toggle-field {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+      }
+      .toggle-field input { width: auto; flex: none; }
+      label.field.toggle-field > .toggle-text {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--text-soft);
+        text-transform: none;
+        letter-spacing: 0;
+      }
+
+      .links-grid { display: flex; flex-direction: column; gap: 8px; }
+      .link-input { display: flex; align-items: center; gap: 8px; }
+      .link-input .prefix {
+        flex: none;
+        width: 30px;
+        text-align: center;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--text-dim);
+      }
+
       button {
         font-family: var(--font-mono);
         font-size: 0.6875rem;
@@ -277,6 +321,34 @@
             <textarea id="bio" maxlength="280" placeholder="A line about your collection"></textarea>
           </label>
 
+          <div class="field">
+            <span>I am a…</span>
+            <div class="roles" id="roles">
+              <button type="button" class="role-chip" data-role="collector">Collector</button>
+              <button type="button" class="role-chip" data-role="dj">DJ</button>
+              <button type="button" class="role-chip" data-role="store">Store</button>
+            </div>
+          </div>
+
+          <label class="field">
+            <span>City</span>
+            <input id="city" maxlength="80" placeholder="Buenos Aires">
+          </label>
+
+          <label class="field toggle-field">
+            <input type="checkbox" id="open-to-offers">
+            <span class="toggle-text">Open to trades &amp; offers</span>
+          </label>
+
+          <div class="field">
+            <span>Links</span>
+            <div class="links-grid">
+              <div class="link-input"><span class="prefix">@</span><input id="link-instagram" maxlength="120" placeholder="Instagram handle or URL" autocomplete="off"></div>
+              <div class="link-input"><span class="prefix">SC</span><input id="link-soundcloud" maxlength="200" placeholder="SoundCloud URL" autocomplete="off"></div>
+              <div class="link-input"><span class="prefix">↗</span><input id="link-website" maxlength="200" placeholder="Website" autocomplete="off"></div>
+            </div>
+          </div>
+
           <div class="row">
             <button type="button" class="primary" id="save-profile">Save profile</button>
           </div>
@@ -319,6 +391,6 @@
       </template>
     </div>
 
-    <script type="module" src="/js/settings.js?v=1"></script>
+    <script type="module" src="/js/settings.js?v=3"></script>
   </body>
 </html>

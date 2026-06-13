@@ -41,6 +41,12 @@ async function init() {
     displayName: document.getElementById("display-name"),
     username: document.getElementById("username"),
     bio: document.getElementById("bio"),
+    roles: document.getElementById("roles"),
+    city: document.getElementById("city"),
+    openToOffers: document.getElementById("open-to-offers"),
+    linkInstagram: document.getElementById("link-instagram"),
+    linkSoundcloud: document.getElementById("link-soundcloud"),
+    linkWebsite: document.getElementById("link-website"),
     saveProfile: document.getElementById("save-profile"),
     profileNote: document.getElementById("profile-note"),
     statRecords: document.getElementById("stat-records"),
@@ -75,6 +81,15 @@ function paintProfile() {
   els.displayName.value = profile.display_name || "";
   els.username.value = profile.username || "";
   els.bio.value = profile.bio || "";
+  els.city.value = profile.city || "";
+  els.openToOffers.checked = Boolean(profile.open_to_offers);
+  els.linkInstagram.value = profile.link_instagram || "";
+  els.linkSoundcloud.value = profile.link_soundcloud || "";
+  els.linkWebsite.value = profile.link_website || "";
+  const roles = new Set(profile.roles || []);
+  for (const chip of els.roles.querySelectorAll(".role-chip")) {
+    chip.classList.toggle("is-on", roles.has(chip.dataset.role));
+  }
   els.statsLink.href = `/u/${profile.username}/stats`;
   paintAvatar();
 }
@@ -98,7 +113,16 @@ function bindProfile() {
     if (file) uploadAvatar(file);
   });
 
+  els.roles.addEventListener("click", (event) => {
+    const chip = event.target.closest(".role-chip");
+    if (chip) chip.classList.toggle("is-on");
+  });
+
   els.saveProfile.addEventListener("click", saveProfile);
+}
+
+function selectedRoles() {
+  return [...els.roles.querySelectorAll(".role-chip.is-on")].map((chip) => chip.dataset.role);
 }
 
 async function saveProfile() {
@@ -116,10 +140,19 @@ async function saveProfile() {
   els.profileNote.className = "note";
   els.profileNote.textContent = "Saving…";
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({ display_name: displayName, username, bio })
-    .eq("id", profile.id);
+  const patch = {
+    display_name: displayName,
+    username,
+    bio,
+    roles: selectedRoles(),
+    city: els.city.value.trim(),
+    open_to_offers: els.openToOffers.checked,
+    link_instagram: els.linkInstagram.value.trim(),
+    link_soundcloud: els.linkSoundcloud.value.trim(),
+    link_website: els.linkWebsite.value.trim(),
+  };
+
+  const { error } = await supabase.from("profiles").update(patch).eq("id", profile.id);
 
   els.saveProfile.disabled = false;
   if (error) {
@@ -129,7 +162,7 @@ async function saveProfile() {
   }
 
   const usernameChanged = username !== profile.username;
-  profile = { ...profile, display_name: displayName, username, bio };
+  profile = { ...profile, ...patch };
   paintAvatar();
   els.statsLink.href = `/u/${profile.username}/stats`;
   document.getElementById("collection-link").href = `/u/${profile.username}`;

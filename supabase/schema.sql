@@ -12,6 +12,12 @@ create table public.profiles (
   display_name text not null default '',
   bio          text not null default '',
   avatar_path  text,                               -- storage: avatars/<owner_id>/<ms>.jpg
+  roles        text[] not null default '{}',       -- any of: collector, dj, store
+  city         text not null default '',
+  link_instagram  text not null default '',
+  link_soundcloud text not null default '',
+  link_website    text not null default '',
+  open_to_offers  boolean not null default false,
   created_at   timestamptz not null default now()
 );
 -- NOTE: emails live only in auth.users, never here.
