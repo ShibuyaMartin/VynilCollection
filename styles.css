@@ -661,7 +661,7 @@ body::before {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 10px;
+  margin: 0.5rem 0 1.5rem;
 }
 
 .album-summary__kicker {
@@ -673,9 +673,14 @@ body::before {
   font-family: var(--font-sans);
 }
 
+/* Match the kicker's typographic rhythm so the two read as one line. */
 .album-summary__head .follow-button {
   flex: none;
-  padding: 5px 12px;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  padding: 7px 14px;
 }
 
 .album-summary__title {
