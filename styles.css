@@ -894,6 +894,11 @@ body::before {
 
 /* OVERRIDES */
 .control-strip { position:fixed!important;top:0;right:0;z-index:200;background:none!important;border:none!important;padding:12px!important;display:flex!important;align-items:center;justify-content:flex-end;gap:10px!important;width:auto!important;grid-template-columns:unset!important; }
+/* On narrow screens the icon row would collide with the logo, so let it wrap
+   to a second right-aligned row. */
+@media (max-width: 560px) {
+  .control-strip { flex-wrap:wrap!important; max-width:200px; row-gap:8px!important; }
+}
 
 /* Etched in the run-out groove, like on the record it comes from. The
    faint base text carries a shine that sweeps across it — driven by the

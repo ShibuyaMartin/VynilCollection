@@ -23,3 +23,10 @@ export function coverPublicUrl(coverPath) {
   }
   return `${SUPABASE_URL}/storage/v1/object/public/covers/${coverPath}`;
 }
+
+export function avatarPublicUrl(avatarPath) {
+  if (!avatarPath) {
+    return "";
+  }
+  return `${SUPABASE_URL}/storage/v1/object/public/avatars/${avatarPath}`;
+}

@@ -11,6 +11,7 @@ create table public.profiles (
                check (username ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$'),
   display_name text not null default '',
   bio          text not null default '',
+  avatar_path  text,                               -- storage: avatars/<owner_id>/<ms>.jpg
   created_at   timestamptz not null default now()
 );
 -- NOTE: emails live only in auth.users, never here.
@@ -156,6 +157,30 @@ create policy "review as yourself"    on public.place_reviews for insert with ch
 create policy "edit own review"       on public.place_reviews for update using (author_id = auth.uid());
 create policy "delete own review"     on public.place_reviews for delete using (author_id = auth.uid());
 
+-- ===== Wishlist (wantlist) ==================================================
+
+create table public.wishlist (
+  id                 uuid primary key default gen_random_uuid(),
+  owner_id           uuid not null references public.profiles(id) on delete cascade,
+  artist             text not null default '',
+  title              text not null default '',
+  year               int,
+  discogs_release_id text,
+  discogs_url        text not null default '',
+  cover_image        text not null default '',
+  priority           int  not null default 2 check (priority between 1 and 3),
+  max_price          numeric(10,2),
+  created_at         timestamptz not null default now()
+);
+create index wishlist_owner_idx on public.wishlist (owner_id);
+
+alter table public.wishlist enable row level security;
+create policy "wishlist is public"   on public.wishlist for select using (true);
+create policy "add to own wishlist"  on public.wishlist for insert with check (owner_id = auth.uid());
+create policy "edit own wishlist"    on public.wishlist for update using (owner_id = auth.uid());
+create policy "remove from wishlist" on public.wishlist for delete using (owner_id = auth.uid());
+
 -- ===== Storage ==============================================================
--- Create a PUBLIC bucket named exactly `covers` in Dashboard -> Storage.
--- No storage policies needed: writes are service-role only, reads are public.
+-- Create PUBLIC buckets named exactly `covers` and `avatars` in Dashboard ->
+-- Storage. No storage policies needed: writes are service-role only (via
+-- /api/records and /api/avatar), reads are public.

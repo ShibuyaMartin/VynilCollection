@@ -13,6 +13,10 @@
       "destination": "/places.html"
     },
     {
+      "source": "/settings",
+      "destination": "/settings.html"
+    },
+    {
       "source": "/u/:username/stats",
       "destination": "/stats.html"
     },
