@@ -121,7 +121,13 @@
         align-items: center;
         justify-content: center;
       }
-      .card__cover--empty svg { width: 100%; height: 100%; }
+      .card__cover--empty img {
+        width: 78%;
+        height: 78%;
+        object-fit: contain;
+        object-position: center;
+        filter: none;
+      }
 
       .card:hover .card__cover,
       .card:focus-within .card__cover {
@@ -244,6 +250,6 @@
       </div>
     </div>
 
-    <script type="module" src="/js/explore.js?v=6"></script>
+    <script type="module" src="/js/explore.js?v=8"></script>
   </body>
 </html>

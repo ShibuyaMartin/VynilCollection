@@ -4,7 +4,7 @@
 
 import { supabase, avatarPublicUrl } from "/js/supabase-client.js";
 import { requireSession, getOwnProfile, signOut } from "/js/auth.js";
-import { soundwaveAvatarSvg } from "/js/soundwave-avatar.js";
+import { defaultAvatarUrl } from "/js/default-avatar.js";
 
 const USERNAME_RE = /^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$/;
 const PRIORITY_LABELS = { 1: "High", 2: "Medium", 3: "Low" };
@@ -103,8 +103,11 @@ function paintAvatar() {
     img.alt = "";
     els.avatar.replaceChildren(img);
   } else {
-    // Generated ASCII martian, seeded by the re-rollable seed (or username).
-    els.avatar.innerHTML = soundwaveAvatarSvg(profile.avatar_seed || profile.username || profile.id);
+    // Generated DiceBear thumb, seeded by the re-rollable seed (or username).
+    const img = document.createElement("img");
+    img.src = defaultAvatarUrl(profile.avatar_seed || profile.username || profile.id);
+    img.alt = "";
+    els.avatar.replaceChildren(img);
   }
 }
 
