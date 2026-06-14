@@ -1,12 +1,12 @@
-// Deterministic default avatar: a curved-vector sound wave, seeded by the
-// user id/username so each person gets a unique-but-stable identicon. No
-// photo, no external lib — just an inline SVG of layered wave paths in the
-// Deadwax palette. Used wherever an avatar shows when avatar_path is empty.
+// Deterministic default avatar: a fanned bundle of fine curved lines whose
+// envelope pinches and swells — a generative "standing wave" seeded by the
+// user id/username, so each person gets a unique-but-stable identicon. No
+// photo, no external lib — inline SVG in the Deadwax B&W palette, square.
 
-const INK = "#f3ede3";
+const INK = "243, 237, 227"; // var(--text) as rgb, for per-line opacity
 
-// xmur3 string hash → a deterministic 32-bit seed.
-function hashSeed(str) {
+// xmur3 string hash → deterministic 32-bit seed → [0,1) generator.
+function makeRng(str) {
   let h = 1779033703 ^ str.length;
   for (let i = 0; i < str.length; i += 1) {
     h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
@@ -20,42 +20,42 @@ function hashSeed(str) {
   };
 }
 
-// Returns an SVG string: concentric/stacked sine waves whose amplitude,
-// frequency, phase and stroke count derive from the seed.
+// Square SVG string. `size` is the rendered px; the viewBox is fixed at 100.
 export function soundwaveAvatarSvg(seed, size = 96) {
-  const rand = hashSeed(String(seed || "deadwax"));
-  const W = 100;
-  const H = 100;
-  const lines = 3 + Math.floor(rand() * 3); // 3–5 waves
-  const baseFreq = 1.4 + rand() * 2.6; // cycles across the width
+  const rand = makeRng(String(seed || "deadwax"));
+  const V = 100;
+  const cx = V / 2;
+  const maxW = 46;
+
+  const lines = 20 + Math.floor(rand() * 12); // 20–31 strands — readable when tiny
+  const lobes = 2 + Math.floor(rand() * 2); // 2–3 swells stacked in the square
   const phase = rand() * Math.PI * 2;
+  const wob = 0.3 + rand() * 0.4; // swell-size variation
+  const wobFreq = 0.5 + rand() * 1;
+  const stroke = (0.6 + rand() * 0.3).toFixed(2);
+
+  const steps = 90;
   const paths = [];
-
   for (let i = 0; i < lines; i += 1) {
-    const t = lines === 1 ? 0.5 : i / (lines - 1);
-    const midY = 24 + t * 52; // spread the baselines vertically
-    const amp = 6 + rand() * 16;
-    const freq = baseFreq * (0.7 + rand() * 0.6);
-    const ph = phase + i * (0.6 + rand());
-    const opacity = (0.35 + 0.65 * (1 - Math.abs(t - 0.5) * 2)).toFixed(2);
-    const width = (1 + rand() * 1.6).toFixed(2);
-
+    const a = lines === 1 ? 0 : (i / (lines - 1)) * 2 - 1; // -1..1 fan
     let d = "";
-    const step = 4;
-    for (let x = 0; x <= W; x += step) {
-      const y = midY + Math.sin((x / W) * Math.PI * 2 * freq + ph) * amp;
-      d += `${x === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)} `;
+    for (let s = 0; s <= steps; s += 1) {
+      const t = s / steps;
+      const env = Math.sin(Math.PI * t * lobes);
+      const sizeMod = 0.6 + wob * Math.sin(Math.PI * t * lobes * wobFreq + phase);
+      const x = cx + a * maxW * env * sizeMod;
+      const y = t * V;
+      d += `${s === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)} `;
     }
+    const op = (0.22 + 0.55 * Math.abs(a)).toFixed(2);
     paths.push(
-      `<path d="${d.trim()}" fill="none" stroke="${INK}" stroke-width="${width}" stroke-linecap="round" opacity="${opacity}"/>`
+      `<path d="${d.trim()}" fill="none" stroke="rgba(${INK},${op})" stroke-width="${stroke}"/>`
     );
   }
 
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${size}" height="${size}" ` +
-    `role="img" aria-label="Avatar" preserveAspectRatio="xMidYMid slice">` +
-    paths.join("") +
-    `</svg>`
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${V} ${V}" width="${size}" height="${size}" ` +
+    `role="img" aria-label="Avatar">${paths.join("")}</svg>`
   );
 }
 
