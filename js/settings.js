@@ -193,6 +193,9 @@ async function randomizeAvatar() {
     .eq("id", profile.id);
   if (error) {
     els.avatarNote.textContent = error.message || "Could not save.";
+  } else {
+    els.avatarNote.className = "note ok";
+    els.avatarNote.textContent = "New avatar saved.";
   }
 }
 
