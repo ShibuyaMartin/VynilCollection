@@ -1,11 +1,13 @@
-// Deterministic default avatar: a fanned bundle of fine curved lines whose
-// envelope pinches and swells — a generative "standing wave" seeded by the
-// user id/username, so each person gets a unique-but-stable identicon. No
-// photo, no external lib — inline SVG in the Deadwax B&W palette, square.
+// Deterministic default avatar: a little ASCII "martian" — a left-right
+// symmetric invader with a guaranteed face (eyes, sometimes a mouth and
+// antennae), seeded by the user id/username so each person gets a
+// unique-but-stable creature. Inline SVG monospace text, Deadwax B&W.
+// (Export name kept as soundwaveAvatarSvg so existing imports still work.)
 
-const INK = "243, 237, 227"; // var(--text) as rgb, for per-line opacity
+const INK = "#f3ede3";
+const FILLS = ["#", "@", "%", "&", "*", "0", "8", "$", "+", "=", "M", "W"];
+const EYES = ["o", "O", "0", "*", "x", "^", "-", "•", "□", "▪"];
 
-// xmur3 string hash → deterministic 32-bit seed → [0,1) generator.
 function makeRng(str) {
   let h = 1779033703 ^ str.length;
   for (let i = 0; i < str.length; i += 1) {
@@ -20,46 +22,76 @@ function makeRng(str) {
   };
 }
 
-// Square SVG string. `size` is the rendered px; the viewBox is fixed at 100.
-export function soundwaveAvatarSvg(seed, size = 96) {
-  const rand = makeRng(String(seed || "deadwax"));
-  const V = 100;
-  const cx = V / 2;
-  const maxW = 46;
+function pick(rand, arr) {
+  return arr[Math.floor(rand() * arr.length)];
+}
 
-  const lines = 20 + Math.floor(rand() * 12); // 20–31 strands — readable when tiny
-  const lobes = 2 + Math.floor(rand() * 2); // 2–3 swells stacked in the square
-  const phase = rand() * Math.PI * 2;
-  const wob = 0.3 + rand() * 0.4; // swell-size variation
-  const wobFreq = 0.5 + rand() * 1;
-  const stroke = (0.6 + rand() * 0.3).toFixed(2);
+// Build a COLS×ROWS character grid: a symmetric body filled with one glyph,
+// with eyes carved/placed and optional antennae + mouth.
+function buildMartian(rand) {
+  const COLS = 7;
+  const ROWS = 7;
+  const half = Math.floor(COLS / 2); // center column index
+  const fill = pick(rand, FILLS);
+  const eye = pick(rand, EYES);
+  const grid = Array.from({ length: ROWS }, () => Array(COLS).fill(" "));
 
-  const steps = 90;
-  const paths = [];
-  for (let i = 0; i < lines; i += 1) {
-    const a = lines === 1 ? 0 : (i / (lines - 1)) * 2 - 1; // -1..1 fan
-    let d = "";
-    for (let s = 0; s <= steps; s += 1) {
-      const t = s / steps;
-      const env = Math.sin(Math.PI * t * lobes);
-      const sizeMod = 0.6 + wob * Math.sin(Math.PI * t * lobes * wobFreq + phase);
-      const x = cx + a * maxW * env * sizeMod;
-      const y = t * V;
-      d += `${s === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)} `;
+  // Body: random symmetric blob, denser in the middle rows.
+  for (let y = 1; y < ROWS; y += 1) {
+    const bias = y === ROWS - 1 ? 0.4 : 0.62;
+    for (let x = 0; x <= half; x += 1) {
+      if (rand() < bias) {
+        grid[y][x] = fill;
+        grid[y][COLS - 1 - x] = fill;
+      }
     }
-    const op = (0.22 + 0.55 * Math.abs(a)).toFixed(2);
-    paths.push(
-      `<path d="${d.trim()}" fill="none" stroke="rgba(${INK},${op})" stroke-width="${stroke}"/>`
-    );
   }
 
+  // Antennae: top row, symmetric, ~70% of the time.
+  if (rand() < 0.7) {
+    const ax = 1 + Math.floor(rand() * (half - 1)); // 1..half-1
+    grid[0][ax] = fill;
+    grid[0][COLS - 1 - ax] = fill;
+  }
+
+  // Eyes: a guaranteed symmetric pair on an upper-middle row, so it reads
+  // as a face. Off-center so they sit either side of the centre line.
+  const eyeRow = 2 + Math.floor(rand() * 2); // row 2 or 3
+  const eyeX = half - 1; // one step left of centre
+  grid[eyeRow][eyeX] = eye;
+  grid[eyeRow][COLS - 1 - eyeX] = eye;
+  grid[eyeRow][half] = " "; // keep the bridge clear
+
+  // Mouth: short centred mark a row or two below the eyes, sometimes.
+  if (rand() < 0.6) {
+    const mouthRow = Math.min(ROWS - 1, eyeRow + 2);
+    grid[mouthRow][half] = rand() < 0.5 ? "_" : "=";
+  }
+
+  return grid.map((row) => row.join("").replace(/\s+$/u, ""));
+}
+
+export function soundwaveAvatarSvg(seed, size = 96) {
+  const rand = makeRng(String(seed || "deadwax"));
+  const lines = buildMartian(rand);
+  const rows = lines.length;
+  const lh = 100 / (rows + 0.6);
+  const fontSize = lh * 1.02;
+
+  const tspans = lines
+    .map((line, i) => {
+      const safe = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      return `<tspan x="50" dy="${i === 0 ? lh * 0.9 : lh}">${safe || " "}</tspan>`;
+    })
+    .join("");
+
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${V} ${V}" width="${size}" height="${size}" ` +
-    `role="img" aria-label="Avatar">${paths.join("")}</svg>`
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${size}" height="${size}" role="img" aria-label="Avatar">` +
+    `<text x="50" y="0" fill="${INK}" font-family="Geist Mono, ui-monospace, monospace" font-size="${fontSize.toFixed(2)}" ` +
+    `font-weight="600" text-anchor="middle" xml:space="preserve" letter-spacing="0.5">${tspans}</text></svg>`
   );
 }
 
-// A ready-to-use data URL, handy for <img src> or background-image.
 export function soundwaveAvatarDataUrl(seed, size = 96) {
   return `data:image/svg+xml,${encodeURIComponent(soundwaveAvatarSvg(seed, size))}`;
 }
