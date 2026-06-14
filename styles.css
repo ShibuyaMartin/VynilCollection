@@ -1535,7 +1535,8 @@ body.overlay-open {
 }
 
 .owner-replace button,
-.owner-delete {
+.owner-delete,
+.owner-hide {
   font-family: var(--font-mono);
   font-size: 0.625rem;
   letter-spacing: 0.06em;
@@ -1548,7 +1549,17 @@ body.overlay-open {
   flex: none;
 }
 
-.owner-delete { align-self: flex-start; }
+.owner-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.owner-hide.is-on {
+  background: var(--text);
+  border-color: var(--text);
+  color: #000;
+}
 
 .owner-delete:hover {
   background: var(--text);
@@ -1557,7 +1568,8 @@ body.overlay-open {
 }
 
 .owner-replace button:disabled,
-.owner-delete:disabled { opacity: 0.5; cursor: wait; }
+.owner-delete:disabled,
+.owner-hide:disabled { opacity: 0.5; cursor: wait; }
 
 .social-note {
   margin: 0;

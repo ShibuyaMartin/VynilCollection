@@ -251,6 +251,7 @@ function rowToLegacyRecord(row) {
     discogsReleaseId: row.discogs_release_id || "",
     tracklist: row.tracklist || [],
     comment: row.comment || undefined,
+    hidden: Boolean(row.hidden),
   };
 }
 
@@ -973,7 +974,9 @@ function renderAlbumPanel() {
   }
 
   const ownerName = state.owner ? (state.owner.display_name || state.owner.username) : "";
-  elements.albumNumber.textContent = `${ownerName ? `${ownerName} \u00b7 ` : ""}Record ${state.activeIndex + 1} / ${state.filteredRecords.length}`;
+  elements.albumNumber.textContent =
+    `${ownerName ? `${ownerName} \u00b7 ` : ""}Record ${state.activeIndex + 1} / ${state.filteredRecords.length}` +
+    (record.hidden ? " \u00b7 Hidden" : "");
   elements.albumTitle.textContent = record.title;
   elements.albumArtist.textContent = record.artist;
   elements.albumMeta.textContent = buildMetaLine(record);

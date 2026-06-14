@@ -15,6 +15,7 @@ const els = {
   ownerReplaceInput: document.getElementById("owner-replace-input"),
   ownerReplaceButton: document.getElementById("owner-replace-button"),
   ownerResults: document.getElementById("owner-results"),
+  ownerHide: document.getElementById("owner-hide"),
   ownerDelete: document.getElementById("owner-delete"),
   ownerStatus: document.getElementById("owner-status"),
   commentsPanel: document.getElementById("comments-panel"),
@@ -115,6 +116,25 @@ function initOwnerTools() {
     }
   });
 
+  els.ownerHide.addEventListener("click", async () => {
+    if (!currentRecord) return;
+    const next = !currentRecord.hidden;
+    els.ownerHide.disabled = true;
+    const { error } = await supabase.from("records").update({ hidden: next }).eq("id", currentRecordId);
+    els.ownerHide.disabled = false;
+    if (error) {
+      els.ownerStatus.className = "social-note";
+      els.ownerStatus.textContent = error.message || "Could not update.";
+      return;
+    }
+    currentRecord.hidden = next;
+    paintHideButton();
+    els.ownerStatus.className = "social-note ok";
+    els.ownerStatus.textContent = next
+      ? "Hidden — only you can see this record now."
+      : "Back to public.";
+  });
+
   els.ownerDelete.addEventListener("click", async () => {
     if (!currentRecord) return;
     const name = `${currentRecord.artist} - ${currentRecord.title}`;
@@ -140,6 +160,13 @@ function initOwnerTools() {
       "Edition replaced — reloading…"
     );
   });
+}
+
+function paintHideButton() {
+  if (!els.ownerHide) return;
+  const isHidden = Boolean(currentRecord && currentRecord.hidden);
+  els.ownerHide.textContent = isHidden ? "Make public" : "Hide from public";
+  els.ownerHide.classList.toggle("is-on", isHidden);
 }
 
 async function searchEditions() {
@@ -256,8 +283,10 @@ export async function renderSocial(record, ownerId) {
   els.ownerEditToggle.hidden = !(viewerId && viewerId === ownerId);
   els.ownerEditPanel.hidden = true;
   els.ownerStatus.textContent = "";
+  els.ownerStatus.className = "social-note";
   els.ownerReplaceInput.value = "";
   els.ownerResults.replaceChildren();
+  paintHideButton();
 
   // Reset while loading.
   likeTotal = 0;

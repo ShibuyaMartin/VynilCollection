@@ -46,6 +46,7 @@ create table public.records (
   cover_path         text,                           -- storage: <owner_id>/<record_id>.jpg
   search_text        text not null default '',
   added_via          text not null default 'barcode-scan',
+  hidden             boolean not null default false,  -- kept in the collection but not shown publicly
   created_at         timestamptz not null default now(),
   unique (owner_id, position)
 );
@@ -59,7 +60,9 @@ create policy "profiles are public"  on public.profiles for select using (true);
 create policy "create own profile"   on public.profiles for insert with check (id = auth.uid());
 create policy "update own profile"   on public.profiles for update using (id = auth.uid());
 
-create policy "records are public"   on public.records for select using (true);
+-- Public sees only visible records; owners always see their own (incl. hidden).
+create policy "public sees visible records" on public.records for select
+  using (not hidden or owner_id = auth.uid());
 create policy "insert own records"   on public.records for insert with check (owner_id = auth.uid());
 create policy "update own records"   on public.records for update using (owner_id = auth.uid());
 create policy "delete own records"   on public.records for delete using (owner_id = auth.uid());
