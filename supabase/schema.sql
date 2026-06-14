@@ -12,6 +12,7 @@ create table public.profiles (
   display_name text not null default '',
   bio          text not null default '',
   avatar_path  text,                               -- storage: avatars/<owner_id>/<ms>.jpg
+  avatar_seed  text not null default '',           -- re-rollable seed for the generated ASCII avatar
   roles        text[] not null default '{}',       -- any of: collector, dj, store
   city         text not null default '',
   link_instagram  text not null default '',

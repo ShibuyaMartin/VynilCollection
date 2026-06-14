@@ -298,7 +298,10 @@
           <div class="avatar-row">
             <div class="avatar" id="avatar"></div>
             <div>
-              <button type="button" id="avatar-button">Change avatar</button>
+              <div class="row">
+                <button type="button" id="avatar-button">Upload photo</button>
+                <button type="button" id="avatar-randomize">↻ Randomize</button>
+              </div>
               <input type="file" id="avatar-input" accept="image/jpeg,image/png,image/webp" hidden>
               <p class="note" id="avatar-note"></p>
             </div>
@@ -391,6 +394,6 @@
       </template>
     </div>
 
-    <script type="module" src="/js/settings.js?v=5"></script>
+    <script type="module" src="/js/settings.js?v=6"></script>
   </body>
 </html>

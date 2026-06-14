@@ -37,6 +37,7 @@ async function init() {
   els = {
     avatar: document.getElementById("avatar"),
     avatarButton: document.getElementById("avatar-button"),
+    avatarRandomize: document.getElementById("avatar-randomize"),
     avatarInput: document.getElementById("avatar-input"),
     avatarNote: document.getElementById("avatar-note"),
     displayName: document.getElementById("display-name"),
@@ -102,8 +103,8 @@ function paintAvatar() {
     img.alt = "";
     els.avatar.replaceChildren(img);
   } else {
-    // Generated sound-wave identicon as the default.
-    els.avatar.innerHTML = soundwaveAvatarSvg(profile.username || profile.id);
+    // Generated ASCII martian, seeded by the re-rollable seed (or username).
+    els.avatar.innerHTML = soundwaveAvatarSvg(profile.avatar_seed || profile.username || profile.id);
   }
 }
 
@@ -113,6 +114,8 @@ function bindProfile() {
     const file = els.avatarInput.files?.[0];
     if (file) uploadAvatar(file);
   });
+
+  els.avatarRandomize.addEventListener("click", randomizeAvatar);
 
   els.roles.addEventListener("click", (event) => {
     const chip = event.target.closest(".role-chip");
@@ -169,6 +172,25 @@ async function saveProfile() {
   document.getElementById("collection-link").href = `/u/${profile.username}`;
   els.profileNote.className = "note ok";
   els.profileNote.textContent = usernameChanged ? `Saved — your page is now /u/${username}` : "Saved.";
+}
+
+// Re-roll the generated ASCII martian: new seed, drop any uploaded photo so
+// the martian shows, save both. Renders instantly — no upload round-trip.
+async function randomizeAvatar() {
+  const seed = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  profile.avatar_seed = seed;
+  profile.avatar_path = null;
+  paintAvatar();
+  els.avatarNote.className = "note";
+  els.avatarNote.textContent = "";
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_seed: seed, avatar_path: null })
+    .eq("id", profile.id);
+  if (error) {
+    els.avatarNote.textContent = error.message || "Could not save.";
+  }
 }
 
 async function uploadAvatar(file) {

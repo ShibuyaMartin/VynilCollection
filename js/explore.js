@@ -30,7 +30,7 @@ async function init() {
 
   const { data: profiles, error } = await supabase
     .from("profiles")
-    .select("id, username, display_name, bio, roles, city, avatar_path")
+    .select("*")
     .order("created_at", { ascending: true })
     .limit(100);
   if (error) throw error;
@@ -96,7 +96,7 @@ function buildCard(profile, covers, count, followers) {
     cover.append(img);
   } else {
     cover.classList.add("card__cover--empty");
-    cover.innerHTML = soundwaveAvatarSvg(profile.username || profile.id);
+    cover.innerHTML = soundwaveAvatarSvg(profile.avatar_seed || profile.username || profile.id);
   }
 
   // Name shown over the cover while collapsed.
