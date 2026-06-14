@@ -3,6 +3,7 @@
 
 import { supabase, coverPublicUrl, avatarPublicUrl } from "/js/supabase-client.js";
 import { getSession, getOwnProfile } from "/js/auth.js";
+import { soundwaveAvatarSvg } from "/js/soundwave-avatar.js";
 
 const container = document.getElementById("collections");
 const authLink = document.getElementById("auth-link");
@@ -95,7 +96,7 @@ function buildCard(profile, covers, count, followers) {
     cover.append(img);
   } else {
     cover.classList.add("card__cover--empty");
-    cover.textContent = (profile.display_name || profile.username || "?").charAt(0).toUpperCase();
+    cover.innerHTML = soundwaveAvatarSvg(profile.username || profile.id);
   }
 
   // Name shown over the cover while collapsed.

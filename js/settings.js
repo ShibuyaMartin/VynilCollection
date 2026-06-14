@@ -4,6 +4,7 @@
 
 import { supabase, avatarPublicUrl } from "/js/supabase-client.js";
 import { requireSession, getOwnProfile, signOut } from "/js/auth.js";
+import { soundwaveAvatarSvg } from "/js/soundwave-avatar.js";
 
 const USERNAME_RE = /^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$/;
 const PRIORITY_LABELS = { 1: "High", 2: "Medium", 3: "Low" };
@@ -95,14 +96,14 @@ function paintProfile() {
 }
 
 function paintAvatar() {
-  els.avatar.replaceChildren();
   if (profile.avatar_path) {
     const img = document.createElement("img");
     img.src = avatarPublicUrl(profile.avatar_path);
     img.alt = "";
-    els.avatar.append(img);
+    els.avatar.replaceChildren(img);
   } else {
-    els.avatar.textContent = (profile.display_name || profile.username || "?").charAt(0).toUpperCase();
+    // Generated sound-wave identicon as the default.
+    els.avatar.innerHTML = soundwaveAvatarSvg(profile.username || profile.id);
   }
 }
 
